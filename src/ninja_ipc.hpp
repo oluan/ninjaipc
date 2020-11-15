@@ -57,7 +57,7 @@ void        respond_text                (const ninjahandle& handle, const char* 
 
 template<typename T>
 void respond(const ninjahandle& handle, T buffer) {
-    return respond(handle, reinterpret_cast<void*>(buffer), sizeof T);
+    respond(handle, reinterpret_cast<void*>(buffer), sizeof(T));
 }
 
 /* client */
@@ -66,7 +66,7 @@ bool        send_request(const ninjahandle& handle, void* buffer, std::size_t bu
 
 template<typename T>
 bool send_request(const ninjahandle& handle, T buffer) {
-    return send_request(handle, reinterpret_cast<void*>(&buffer), sizeof T, -1);
+    return send_request(handle, reinterpret_cast<void*>(&buffer), sizeof(T), -1);
 }
 
 } // ninjaipc

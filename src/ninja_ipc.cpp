@@ -14,6 +14,7 @@
 #include "ninja_ipc.hpp"
 #include <cassert>
 #include <vector>
+#include <cstring>
 
 constexpr auto SERVER_TAG = "NINJAIPC_SERVER";
 constexpr auto CLIENT_TAG = "NINJAIPC_CLIENT";
@@ -24,8 +25,10 @@ std::vector< t_ninja_callback > server_callbacks = {};
 
 void write_buffer(const ninjahandle& handle, void* buffer, std::size_t buffer_size) 
 {
+#ifdef IS_WINDOWS
     std::memset( handle.file_view, '\0', handle.buffer_size );
     std::memcpy( handle.file_view, buffer, buffer_size );
+#endif
 }
 
 ninjahandle create_server(const std::string& name, const std::size_t buffer_size) 
@@ -135,6 +138,7 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
 
     return handle;
 #endif
+    return {}; // FIXME
 }
 
 void register_server_callback(t_ninja_callback callback) 
@@ -249,6 +253,7 @@ ninjahandle connect(const std::string& name, std::size_t buffer_size)
 
     return handle;
 #endif
+    return {}; // FIXME
 }
 
 bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_size, std::int32_t timeout) 
