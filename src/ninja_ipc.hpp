@@ -57,7 +57,7 @@ void        respond_text                (const ninjahandle& handle, const char* 
 
 template<typename T>
 void respond(const ninjahandle& handle, T buffer) {
-    respond(handle, reinterpret_cast<void*>(buffer), sizeof(T));
+    respond(handle, reinterpret_cast<void*>(&buffer), sizeof(T));
 }
 
 /* client */
