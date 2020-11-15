@@ -28,14 +28,86 @@ void write_buffer(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 #ifdef IS_WINDOWS
     std::memset( handle.file_view, '\0', handle.buffer_size );
     std::memcpy( handle.file_view, buffer, buffer_size );
-#endif
+#endif // IS_WINDOWS
 }
 
 ninjahandle create_server(const std::string& name, const std::size_t buffer_size) 
 {
+#ifdef IS_LINUX
     ninjahandle handle = {
         buffer_size
     };
+    std::string slash_tag = { "/" + name };
+    handle.file_descriptor = shm_open( slash_tag.c_str(), O_CREAT | O_RDWR, 0644 );
+
+    if ( handle.file_descriptor < 0 ) 
+    {
+        handle.good = false;
+        handle.last_err = ninjaerror::LINUX_FILE_DESCRIPTOR_CREATION_FAILED;
+        return handle;
+    }
+
+    ftruncate( handle.file_descriptor, buffer_size );
+
+    handle.file_mapping = reinterpret_cast<caddr_t>
+    (
+        mmap
+        (
+            nullptr,
+            buffer_size,
+            PROT_READ | PROT_WRITE,
+            MAP_SHARED,
+            handle.file_descriptor,
+            0
+        )
+    );
+
+    if ( handle.file_mapping == reinterpret_cast<caddr_t>(-1) )
+    {
+        close( handle.file_descriptor );
+        handle.good = false;
+        handle.last_err = ninjaerror::LINUX_FILE_MAPPING_MAP_FAILED;
+        return handle;
+    }
+
+    std::string server_semaphore_name{ name + SERVER_TAG };
+
+    handle.server_semaphore = sem_open(
+        server_semaphore_name.c_str(),
+        O_CREAT,
+        0644,
+        0
+    );
+
+    if ( handle.server_semaphore == reinterpret_cast<void*>(-1) ) 
+    {
+        close( handle.file_descriptor );
+        munmap( handle.file_mapping, buffer_size );
+        handle.good = false;
+        handle.last_err = ninjaerror::LINUX_SERVER_SEMAPHORE_CREATION_FAILED;
+        return handle;
+    }
+
+    std::string client_semaphore_name{ name + CLIENT_TAG };
+
+    handle.client_semaphore = sem_open(
+        client_semaphore_name.c_str(),
+        O_CREAT,
+        0644,
+        0
+    );
+
+    if ( handle.client_semaphore == reinterpret_cast<void*>(-1) ) 
+    {
+        close( handle.file_descriptor );
+        munmap( handle.file_mapping, buffer_size );
+        handle.good = false;
+        handle.last_err = ninjaerror::LINUX_CLIENT_SEMAPHORE_CREATION_FAILED;
+        return handle;
+    }
+
+    return handle;
+#endif // IS_LINUX
 #ifdef IS_WINDOWS
     handle.file_mapping = CreateFileMappingA
     (
@@ -137,7 +209,7 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
     }
 
     return handle;
-#endif
+#endif // IS_WINDOWS
     return {}; // FIXME
 }
 
@@ -162,7 +234,7 @@ void listen(const ninjahandle& handle)
 
     for ( auto& callback : server_callbacks )
         callback( handle.file_view );
-#endif
+#endif // IS_WINDOWS
 }
 
 void listen(const ninjahandle& handle, t_ninja_callback callback) 
@@ -178,7 +250,7 @@ void respond(const ninjahandle& handle, void* buffer, std::size_t buffer_size)
     assert( handle.file_view && "File view was null" );
     write_buffer( handle, buffer, buffer_size );
     assert( SetEvent( handle.server_event ) && "Failed to set server event" );
-#endif
+#endif // IS_WINDOWS
 }
 
 void respond_text(const ninjahandle& handle, const char* content) 
@@ -252,7 +324,7 @@ ninjahandle connect(const std::string& name, std::size_t buffer_size)
     }
 
     return handle;
-#endif
+#endif // IS_WINDOWS
     return {}; // FIXME
 }
 
@@ -274,7 +346,7 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
     assert( wait_code == WAIT_OBJECT_0  && "Unexpected Wait code received"      );
 
     return true;
-#endif
+#endif // IS_WINDOWS
     return true;
 }
 

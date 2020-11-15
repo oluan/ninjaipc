@@ -17,6 +17,14 @@
 #include <Windows.h>
 #define IS_WINDOWS
 #endif
+#ifdef __linux__
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <semaphore.h>
+#define IS_LINUX
+#endif
 
 namespace ninjaipc {
 
@@ -31,6 +39,11 @@ enum class ninjaerror : std::uint32_t {
     WIN_CLIENT_EVENT_ALREADY_EXISTS,
     WIN_CLIENT_EVENT_CONNECTION_FAILED,
     WIN_SHARED_MEM_VIEW_FAILED,
+
+    LINUX_FILE_DESCRIPTOR_CREATION_FAILED,
+    LINUX_FILE_MAPPING_MAP_FAILED,
+    LINUX_SERVER_SEMAPHORE_CREATION_FAILED,
+    LINUX_CLIENT_SEMAPHORE_CREATION_FAILED,
 };
 
 struct ninjahandle {
@@ -42,6 +55,12 @@ struct ninjahandle {
     client_event = {},
     server_event = {};
     void* file_view = {};
+#endif
+#ifdef IS_LINUX
+    int file_descriptor = {};
+    caddr_t file_mapping = {};
+    sem_t* client_semaphore = {},
+    *server_semaphore = {};
 #endif
 };
 
