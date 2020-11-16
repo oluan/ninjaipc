@@ -451,12 +451,12 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 
     if ( timeout == -1 )
     {
-        const int retval = sem_wait( handle.server_semaphore );
+        const int wait_code = sem_wait( handle.server_semaphore );
 
-        if ( retval == 0 )
+        if ( wait_code == 0 )
             return true;
 
-        if ( retval == -1 )
+        if ( wait_code == -1 )
         {
             assert( errno != EINVAL && "Invalid server semaphore" );
         }
@@ -468,12 +468,12 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
     {
         timespec timeout_spec = ms_to_timespec(timeout);
 
-        const int retval = sem_timedwait( handle.server_semaphore, &timeout_spec );
+        const int wait_code = sem_timedwait( handle.server_semaphore, &timeout_spec );
 
-        if ( retval == 0 )
+        if ( wait_code == 0 )
             return true;
 
-        if ( retval == -1 )
+        if ( wait_code == -1 )
         {
             assert( errno != EDEADLK   && "Deadlock condition was detected"         );
             assert( errno != EINVAL    && "Invalid server semaphore"                );
