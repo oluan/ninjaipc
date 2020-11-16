@@ -444,14 +444,14 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
             ( timeout % 1000 ) * 1000000
         };
     };
-    
+
     assert( handle.file_mapping && "File mapping was null" );
     write_buffer( handle, buffer, buffer_size );
     sem_post( handle.client_semaphore );
 
     if ( timeout == -1 )
     {
-        const int retval = sem_wait( handle.server_semaphore ) == 0;
+        const int retval = sem_wait( handle.server_semaphore );
 
         if ( retval == 0 )
             return true;
