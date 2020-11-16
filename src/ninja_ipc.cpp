@@ -435,14 +435,53 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
     return true;
 #endif // IS_WINDOWS
 #ifdef IS_LINUX
+    auto ms_to_timespec = [](std::int32_t timeout) -> timespec
+    {
+        assert( timeout > 0 && "Invalid value passed to ms_to_timespec" );
+        return 
+        {
+            timeout / 1000,
+            ( timeout % 1000 ) * 1000000
+        };
+    };
+    
     assert( handle.file_mapping && "File mapping was null" );
     write_buffer( handle, buffer, buffer_size );
     sem_post( handle.client_semaphore );
-    if ( !sem_wait( handle.server_semaphore) )
+
+    if ( timeout == -1 )
     {
-        return true;
+        const int retval = sem_wait( handle.server_semaphore ) == 0;
+
+        if ( retval == 0 )
+            return true;
+
+        if ( retval == -1 )
+        {
+            assert( errno != EINVAL && "Invalid server semaphore" );
+        }
+
+        return false;
+
     }
-    return false;
+    else
+    {
+        timespec timeout_spec = ms_to_timespec(timeout);
+
+        const int retval = sem_timedwait( handle.server_semaphore, &timeout_spec );
+
+        if ( retval == 0 )
+            return true;
+
+        if ( retval == -1 )
+        {
+            assert( errno != EDEADLK   && "Deadlock condition was detected"         );
+            assert( errno != EINVAL    && "Invalid server semaphore"                );
+            assert( errno == ETIMEDOUT && "Unknown return value on sem_timedwait()" );       
+        }
+
+        return false;
+    }
 #endif
 }
 

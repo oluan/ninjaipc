@@ -368,3 +368,6 @@ src/linuxtest.cpp
 src/linuxtestc.cpp
 src/linuxserver
 src/linuxclient
+
+# VSCode Settings
+src/.vscode/settings.json
