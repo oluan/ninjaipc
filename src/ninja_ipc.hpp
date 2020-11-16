@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef _NINJA_IPC_HPP_
+#define _NINJA_IPC_HPP_
 #include <iostream>
 #include <functional>
 #ifdef _WIN32
@@ -97,3 +99,4 @@ bool send_request(const ninjahandle& handle, T buffer) {
 }
 
 } // ninjaipc
+#endif // #ifndef _NINJA_IPC_HPP_
