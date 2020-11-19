@@ -29,11 +29,18 @@ std::vector< ninja_callback > server_callbacks = {};
 
 void write_buffer(const ninjahandle& handle, void* buffer, std::size_t buffer_size) 
 {
+    /*
+    * Let's clean the whole buffer first
+    * so we don't mix up two blocks of data
+    *
+    * After that we fill the buffer with received data
+    * If buffer is null, we are simply cleaning it
+    */
 #ifdef IS_WINDOWS
     std::memset( handle.file_view, '\0', handle.buffer_size );
-	if ( buffer )
+    if ( buffer )
         std::memcpy( handle.file_view, buffer, buffer_size );
-#endif // IS_WINDOWS
+#endif
 #ifdef IS_LINUX
     memset( handle.file_mapping, '\0', handle.buffer_size );
     if ( buffer )
@@ -44,9 +51,14 @@ void write_buffer(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 ninjahandle create_server(const std::string& name, const std::size_t buffer_size) 
 {
     ninjahandle handle = {
-        buffer_size
+        /* handle.buffer_size = */ buffer_size
     };
 #ifdef IS_WINDOWS
+
+    /*
+    * We will be using file mapping as our
+    * shared memory object
+    */
     handle.file_mapping = CreateFileMappingA
     (
         INVALID_HANDLE_VALUE, // pages as file
@@ -64,6 +76,10 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
         return handle;
     }
 
+    /*
+    * Ensures that we are creating the file mapping
+    * instead of opening an existing one
+    */
     if ( GetLastError() == ERROR_ALREADY_EXISTS ) 
     {
         CloseHandle     ( handle.file_mapping );
@@ -99,6 +115,10 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
         return handle;
     }
 
+    /*
+    * Let's use a suffix so we don't collide
+    * with already existing named events
+    */
     std::string client_event_name{ name + CLIENT_TAG };
 
     handle.client_event = CreateEventA
@@ -118,6 +138,9 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
         return handle;
     }
 
+    /*
+    * Ensures that we are creating the event
+    */
     if ( GetLastError() == ERROR_ALREADY_EXISTS ) 
     {
         CloseHandle     ( handle.server_event );
@@ -128,6 +151,10 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
         return handle;
     }
 
+    /*
+    * CreateFileMapping doesn't actually maps anything
+    * MapViewOfFile does it
+    */
     handle.file_view = MapViewOfFile
     (
         handle.file_mapping,
@@ -147,9 +174,18 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
     }
 
     return handle;
-#endif // IS_WINDOWS
+#endif
 #ifdef IS_LINUX
+
+    /*
+    * The backing file needs to have "/"
+    * at the beginning
+    */
     std::string slash_tag = { "/" + name };
+
+    /*
+    * Let's use O_CREAT so we ensure that we are creating it
+    */
     handle.file_descriptor = shm_open( slash_tag.c_str(), O_CREAT | O_RDWR, 0644 );
 
     if ( handle.file_descriptor < 0 ) 
@@ -159,8 +195,14 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
         return handle;
     }
 
+    /*
+    * Reserve space on shared memory backing file
+    */
     ftruncate( handle.file_descriptor, buffer_size );
 
+    /*
+    * Maps the shared memory object
+    */
     handle.file_mapping = reinterpret_cast<caddr_t>
     (
         mmap
@@ -219,12 +261,15 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
     }
 
     return handle;
-#endif // IS_LINUX
-    return {}; // FIXME
+#endif
+    return {};
 }
 
 void register_server_callback(ninja_callback callback) 
 {
+    /*
+    * This needs to be called at least once
+    */
     server_callbacks.push_back( callback );
 }
 
@@ -233,7 +278,14 @@ bool internal_listen(const ninjahandle& handle)
 {
     assert( !server_callbacks.empty() && "No callbacks registered" );
     assert( handle.good               && "Handle was not good" );
-	g_assert_request_response = false;
+
+    /*
+    * Let's ensure that for every request there's at least
+    * one response from the callback(s)
+    *
+    * Set to false so we are expecting response
+    */
+    g_assert_request_response = false;
 #ifdef IS_WINDOWS
     const DWORD wait_code = WaitForSingleObject( handle.client_event, INFINITE );
 
@@ -246,20 +298,27 @@ bool internal_listen(const ninjahandle& handle)
         for ( auto& callback : server_callbacks )
             callback( handle.file_view );
 
+        /*
+        * Check if the callback(s) actually responded
+        * So we don't break the request:response rule
+        */
         assert( g_assert_request_response && "No response sent from callbacks" );
 
         return true;
     }
 
     assert( false && "Unexpected Wait code received" );
-#endif // IS_WINDOWS
+#endif
 #ifdef IS_LINUX
     if ( sem_wait( handle.client_semaphore ) == 0 )
     {
         for ( auto& callback : server_callbacks )
             callback( handle.file_mapping );
 
-		assert( g_assert_request_response && "No response sent from callbacks" );
+        /*
+        * Check for request:response rule
+        */
+        assert( g_assert_request_response && "No response sent from callbacks" );
         return true;
     }
 
@@ -270,6 +329,9 @@ bool internal_listen(const ninjahandle& handle)
 
 void listen(const ninjahandle& handle, ninja_callback callback) 
 {
+    /*
+    * Listen wrapper for minified usage
+    */
     register_server_callback( callback );
     listen( handle );
 }
@@ -286,7 +348,7 @@ void listen(const ninjahandle& handle)
         std::string backspace_block(backspace_amount, '\b');
         std::cout << request_log << backspace_block << std::flush;
 
-		++call_n;
+        ++call_n;
 #endif
     } while ( internal_listen(handle) );
 }
@@ -294,17 +356,21 @@ void listen(const ninjahandle& handle)
 void respond(const ninjahandle& handle, void* buffer, std::size_t buffer_size) 
 {
     assert( handle.good && "Handle was not good" );
-	g_assert_request_response = true;
+
+    /*
+    * We responded!
+    * the request:response rule is preserved
+    */
+    g_assert_request_response = true;
 #ifdef IS_WINDOWS
     assert( handle.file_view && "File view was null" );
     write_buffer( handle, buffer, buffer_size );
     assert( SetEvent( handle.server_event ) && "Failed to set server event" );
-#endif // IS_WINDOWS
+#endif
 #ifdef IS_LINUX
     assert( handle.file_mapping && "File mapping was null" );
     write_buffer( handle, buffer, buffer_size );
     assert( sem_post( handle.server_semaphore ) == 0 && "Failed to set server semaphore" );
-
 #endif
 }
 
@@ -328,8 +394,14 @@ void acknowledge_request(const ninjahandle& handle)
 ninjahandle connect(const std::string& name, std::size_t buffer_size) 
 {
     ninjahandle handle = {
-        buffer_size 
+        /* handle.buffer_size = */ buffer_size
     };
+
+    /*
+    * We are pretty much mimicking the server
+    * creation function for opening handles
+    * and not creating objects
+    */
 
 #ifdef IS_WINDOWS
     handle.file_mapping = OpenFileMappingA
@@ -391,7 +463,7 @@ ninjahandle connect(const std::string& name, std::size_t buffer_size)
     }
 
     return handle;
-#endif // IS_WINDOWS
+#endif
 #ifdef IS_LINUX
     std::string slash_tag = { "/" + name };
     handle.file_descriptor = shm_open( slash_tag.c_str(), O_RDWR, 0644 );
@@ -463,7 +535,7 @@ ninjahandle connect(const std::string& name, std::size_t buffer_size)
     return handle;
 
 #endif
-    return {}; // FIXME
+    return {};
 }
 
 bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_size, std::int32_t timeout) 
@@ -472,23 +544,47 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 #ifdef IS_WINDOWS
     assert( handle.file_view && "File view was null" );
     write_buffer( handle, buffer, buffer_size );
+
+    /*
+    * Notifies client is sending a request
+    */
     assert( SetEvent( handle.client_event ) && "Failed to set client event" );
 
+    /*
+    * Wait for server response
+    */
     const DWORD wait_code = WaitForSingleObject( handle.server_event, timeout );
     
+    /*
+    * Check if timeout occurred
+    */
     if ( wait_code == WAIT_TIMEOUT )
         return false;
 
+    /*
+    * Check if it's fatal
+    */
     assert( wait_code != WAIT_ABANDONED && "Owner thread did not release event" );
     assert( wait_code != WAIT_FAILED    && "WaitForSingleObject failed"         );
+
+    /*
+    * Ensures it's == WAIT_OBJECT_0 aka success
+    */
     assert( wait_code == WAIT_OBJECT_0  && "Unexpected Wait code received"      );
 
     return true;
-#endif // IS_WINDOWS
+#endif
 #ifdef IS_LINUX
     auto ms_to_timespec = [](std::int32_t timeout) -> timespec
     {
         assert( timeout > 0 && "Invalid value passed to ms_to_timespec" );
+
+        /*
+        * sem_timedwait expects the timespec structure
+        * which does not support milliseconds as member
+        * so we need to convert ms:[s,ns]
+        */
+
         return 
         {
             timeout / 1000,
@@ -500,6 +596,11 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
     write_buffer( handle, buffer, buffer_size );
     sem_post( handle.client_semaphore );
 
+    /*
+    * Timeout -1 means we are waiting forever
+    * the value is for maintaining compatibility
+    * with windows INFINITE define
+    */
     if ( timeout == -1 )
     {
         const int wait_code = sem_wait( handle.server_semaphore );
@@ -509,6 +610,9 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 
         if ( wait_code == -1 )
         {
+            /*
+            * Force assert on fatal
+            */
             assert( errno != EINVAL && "Invalid server semaphore" );
         }
 
@@ -526,8 +630,15 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 
         if ( wait_code == -1 )
         {
+            /*
+            * Check if fatal error
+            */
             assert( errno != EDEADLK   && "Deadlock condition was detected"         );
             assert( errno != EINVAL    && "Invalid server semaphore"                );
+            /*
+            * Fine if it's a timeout
+            * just return false to indicate error
+            */
             assert( errno == ETIMEDOUT && "Unknown return value on sem_timedwait()" );       
         }
 
