@@ -87,7 +87,8 @@ void        respond                     (const ninjahandle& handle, void* buffer
 void        respond_text                (const ninjahandle& handle, const char* content);
 
 template<typename T>
-void respond(const ninjahandle& handle, T buffer) {
+void respond(const ninjahandle& handle, T buffer) 
+{
     respond(handle, reinterpret_cast<void*>(&buffer), sizeof(T));
 }
 
@@ -96,7 +97,8 @@ ninjahandle connect(const std::string& name, std::size_t buffer_size = 1024 * 10
 bool        send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_size, std::int32_t timeout);
 
 template<typename T>
-bool send_request(const ninjahandle& handle, T buffer) {
+bool send_request(const ninjahandle& handle, T buffer) 
+{
     return send_request(handle, reinterpret_cast<void*>(&buffer), sizeof(T), -1);
 }
 
