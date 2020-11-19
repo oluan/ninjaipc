@@ -85,6 +85,7 @@ void        listen                      (const ninjahandle& handle);
 void        listen                      (const ninjahandle& handle, ninja_callback callback);
 void        respond                     (const ninjahandle& handle, void* buffer, std::size_t buffer_size);
 void        respond_text                (const ninjahandle& handle, const char* content);
+void        acknowledge_request         (const ninjahandle& handle);
 
 template<typename T>
 void respond(const ninjahandle& handle, T buffer) 

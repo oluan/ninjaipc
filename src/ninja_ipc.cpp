@@ -18,6 +18,7 @@
 
 constexpr auto SERVER_TAG = "NINJAIPC_SERVER";
 constexpr auto CLIENT_TAG = "NINJAIPC_CLIENT";
+static bool g_assert_request_response = true;
 
 namespace ninjaipc {
 
@@ -27,11 +28,13 @@ void write_buffer(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 {
 #ifdef IS_WINDOWS
     std::memset( handle.file_view, '\0', handle.buffer_size );
-    std::memcpy( handle.file_view, buffer, buffer_size );
+	if ( buffer )
+        std::memcpy( handle.file_view, buffer, buffer_size );
 #endif // IS_WINDOWS
 #ifdef IS_LINUX
     memset( handle.file_mapping, '\0', handle.buffer_size );
-    memcpy( handle.file_mapping, buffer, buffer_size );
+    if ( buffer )
+        memcpy( handle.file_mapping, buffer, buffer_size );
 #endif
 }
 
@@ -227,7 +230,7 @@ void listen(const ninjahandle& handle)
 {
     assert( !server_callbacks.empty() && "No callbacks registered" );
     assert( handle.good               && "Handle was not good" );
-
+	g_assert_request_response = false;
 #ifdef IS_WINDOWS
     const DWORD wait_code = WaitForSingleObject( handle.client_event, INFINITE );
 
@@ -239,6 +242,9 @@ void listen(const ninjahandle& handle)
     {
         for ( auto& callback : server_callbacks )
             callback( handle.file_view );
+
+        assert( g_assert_request_response && "No response sent from callbacks" );
+
         listen(handle);
     }
 
@@ -249,6 +255,8 @@ void listen(const ninjahandle& handle)
     {
         for ( auto& callback : server_callbacks )
             callback( handle.file_mapping );
+
+		assert( g_assert_request_response && "No response sent from callbacks" );
         listen(handle);
     }
 
@@ -265,6 +273,7 @@ void listen(const ninjahandle& handle, ninja_callback callback)
 void respond(const ninjahandle& handle, void* buffer, std::size_t buffer_size) 
 {
     assert( handle.good && "Handle was not good" );
+	g_assert_request_response = true;
 #ifdef IS_WINDOWS
     assert( handle.file_view && "File view was null" );
     write_buffer( handle, buffer, buffer_size );
@@ -280,6 +289,12 @@ void respond(const ninjahandle& handle, void* buffer, std::size_t buffer_size)
 void respond_text(const ninjahandle& handle, const char* content) 
 {
     respond( handle, (void*)content, strlen(content) );
+}
+
+void acknowledge_request(const ninjahandle& handle)
+{
+    g_assert_request_response = true;
+    write_buffer(handle, nullptr, 0);
 }
 
 ninjahandle connect(const std::string& name, std::size_t buffer_size) 
