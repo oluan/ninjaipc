@@ -31,6 +31,8 @@
 namespace ninjaipc {
 
 enum class ninjaerror : std::uint32_t {
+    NONE,
+
     SHARED_MEM_CREATION_FAILED,
     SHARED_MEM_CONNECTION_FAILED,
     SHARED_MEM_ALREADY_EXISTS,
