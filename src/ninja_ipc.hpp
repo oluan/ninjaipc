@@ -76,13 +76,13 @@ struct ninjahandle {
 #endif
 };
 
-using t_ninja_callback = std::function<void(void* buffer)>;
+using ninja_callback = std::function<void(void* buffer)>;
 
 /* server */
 ninjahandle create_server               (const std::string& name, const std::size_t buffer_size = 1024 * 1024);
-void        register_server_callback    (t_ninja_callback callback);
+void        register_server_callback    (ninja_callback callback);
 void        listen                      (const ninjahandle& handle);
-void        listen                      (const ninjahandle& handle, t_ninja_callback callback);
+void        listen                      (const ninjahandle& handle, ninja_callback callback);
 void        respond                     (const ninjahandle& handle, void* buffer, std::size_t buffer_size);
 void        respond_text                (const ninjahandle& handle, const char* content);
 

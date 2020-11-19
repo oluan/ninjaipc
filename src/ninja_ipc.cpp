@@ -21,7 +21,7 @@ constexpr auto CLIENT_TAG = "NINJAIPC_CLIENT";
 
 namespace ninjaipc {
 
-std::vector< t_ninja_callback > server_callbacks = {};
+std::vector< ninja_callback > server_callbacks = {};
 
 void write_buffer(const ninjahandle& handle, void* buffer, std::size_t buffer_size) 
 {
@@ -217,7 +217,7 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
     return {}; // FIXME
 }
 
-void register_server_callback(t_ninja_callback callback) 
+void register_server_callback(ninja_callback callback) 
 {
     server_callbacks.push_back( callback );
 }
@@ -248,7 +248,7 @@ void listen(const ninjahandle& handle)
 #endif
 }
 
-void listen(const ninjahandle& handle, t_ninja_callback callback) 
+void listen(const ninjahandle& handle, ninja_callback callback) 
 {
     register_server_callback( callback );
     listen( handle );
