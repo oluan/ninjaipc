@@ -234,19 +234,25 @@ void listen(const ninjahandle& handle)
     // skip WAIT_TIMEOUT since we are waiting forever
     assert( wait_code != WAIT_ABANDONED && "Owner thread did not release event" );
     assert( wait_code != WAIT_FAILED    && "WaitForSingleObject failed"         );
-    assert( wait_code == WAIT_OBJECT_0  && "Unexpected Wait code received"      );
+    
+    if ( wait_code == WAIT_OBJECT_0 )
+    {
+        for ( auto& callback : server_callbacks )
+            callback( handle.file_view );
+        listen(handle);
+    }
 
-    for ( auto& callback : server_callbacks )
-        callback( handle.file_view );
-    listen(handle);
+    assert( false && "Unexpected Wait code received" );
 #endif // IS_WINDOWS
 #ifdef IS_LINUX
     if ( sem_wait( handle.client_semaphore ) == 0 )
     {
         for ( auto& callback : server_callbacks )
             callback( handle.file_mapping );
+        listen(handle);
     }
-    listen(handle);
+
+    assert( false && "Unexpected Wait code received" );
 #endif
 }
 
