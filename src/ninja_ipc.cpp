@@ -240,7 +240,7 @@ void listen(const ninjahandle& handle)
         callback( handle.file_view );
 #endif // IS_WINDOWS
 #ifdef IS_LINUX
-    if ( !sem_wait( handle.client_semaphore ) )
+    if ( sem_wait( handle.client_semaphore ) == 0 )
     {
         for ( auto& callback : server_callbacks )
             callback( handle.file_mapping );

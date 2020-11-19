@@ -99,4 +99,4 @@ bool send_request(const ninjahandle& handle, T buffer) {
 }
 
 } // ninjaipc
-#endif // #ifndef _NINJA_IPC_HPP_
+#endif // _NINJA_IPC_HPP_
