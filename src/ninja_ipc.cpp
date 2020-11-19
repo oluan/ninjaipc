@@ -282,7 +282,8 @@ void respond(const ninjahandle& handle, void* buffer, std::size_t buffer_size)
 #ifdef IS_LINUX
     assert( handle.file_mapping && "File mapping was null" );
     write_buffer( handle, buffer, buffer_size );
-    sem_post( handle.server_semaphore );
+    assert( sem_post( handle.server_semaphore ) == 0 && "Failed to set server semaphore" );
+
 #endif
 }
 
@@ -295,6 +296,12 @@ void acknowledge_request(const ninjahandle& handle)
 {
     g_assert_request_response = true;
     write_buffer(handle, nullptr, 0);
+#ifdef IS_WINDOWS
+    assert( SetEvent( handle.server_event ) && "Failed to set server event" );
+#endif
+#ifdef IS_LINUX
+    assert( sem_post( handle.server_semaphore ) == 0 && "Failed to set server semaphore" );
+#endif
 }
 
 ninjahandle connect(const std::string& name, std::size_t buffer_size) 
