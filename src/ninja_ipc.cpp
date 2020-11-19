@@ -238,6 +238,7 @@ void listen(const ninjahandle& handle)
 
     for ( auto& callback : server_callbacks )
         callback( handle.file_view );
+    listen(handle);
 #endif // IS_WINDOWS
 #ifdef IS_LINUX
     if ( sem_wait( handle.client_semaphore ) == 0 )
@@ -245,6 +246,7 @@ void listen(const ninjahandle& handle)
         for ( auto& callback : server_callbacks )
             callback( handle.file_mapping );
     }
+    listen(handle);
 #endif
 }
 
