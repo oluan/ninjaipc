@@ -15,6 +15,9 @@
 #include <cassert>
 #include <vector>
 #include <cstring>
+#include <string>
+
+#define DIAGNOSE_LISTEN 1
 
 constexpr auto SERVER_TAG = "NINJAIPC_SERVER";
 constexpr auto CLIENT_TAG = "NINJAIPC_CLIENT";
@@ -226,7 +229,7 @@ void register_server_callback(ninja_callback callback)
 }
 
 /* listener methods */
-void listen(const ninjahandle& handle) 
+bool internal_listen(const ninjahandle& handle) 
 {
     assert( !server_callbacks.empty() && "No callbacks registered" );
     assert( handle.good               && "Handle was not good" );
@@ -245,7 +248,7 @@ void listen(const ninjahandle& handle)
 
         assert( g_assert_request_response && "No response sent from callbacks" );
 
-        listen(handle);
+        return true;
     }
 
     assert( false && "Unexpected Wait code received" );
@@ -257,17 +260,35 @@ void listen(const ninjahandle& handle)
             callback( handle.file_mapping );
 
 		assert( g_assert_request_response && "No response sent from callbacks" );
-        listen(handle);
+        return true;
     }
 
     assert( false && "Unexpected Wait code received" );
 #endif
+    return false;
 }
 
 void listen(const ninjahandle& handle, ninja_callback callback) 
 {
     register_server_callback( callback );
     listen( handle );
+}
+
+void listen(const ninjahandle& handle)
+{
+    do 
+    {
+#if DIAGNOSE_LISTEN == 1
+        static long long call_n = { 0 };
+
+        std::string request_log = { "Requests: " + std::to_string(call_n) };
+        int backspace_amount = request_log.length();
+        std::string backspace_block(backspace_amount, '\b');
+        std::cout << request_log << backspace_block << std::flush;
+
+		++call_n;
+#endif
+    } while ( internal_listen(handle) );
 }
 
 void respond(const ninjahandle& handle, void* buffer, std::size_t buffer_size) 
