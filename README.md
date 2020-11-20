@@ -29,7 +29,7 @@ ninjaipc::listen( ipc, [ ipc ]( void* request_content ) -> void
 struct github
 {
     int stars{};
-    char author[25];
+    char author[25]{};
 }
 
 github oluan = { +1 , "oluan" };
