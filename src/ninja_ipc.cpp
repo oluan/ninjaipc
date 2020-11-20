@@ -17,7 +17,7 @@
 #include <cstring>
 #include <string>
 
-#define DIAGNOSE_LISTEN 1
+#define DIAGNOSE_LISTEN 0
 
 constexpr auto SERVER_TAG = "NINJAIPC_SERVER";
 constexpr auto CLIENT_TAG = "NINJAIPC_CLIENT";
