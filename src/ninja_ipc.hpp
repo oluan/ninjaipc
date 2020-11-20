@@ -217,5 +217,27 @@ bool send_request(const ninjahandle& handle, T buffer)
     return send_request(handle, reinterpret_cast<void*>(&buffer), sizeof(T), -1);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Gets IPC buffer content.
+///
+/// @author luan devecchi
+/// @date 11/19/2020
+///
+/// @typeparam T Generic type parameter.
+/// @param  handle The  IPC handle.
+///
+/// @returns The IPC content
+////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename T>
+T* get_ipc_content(const ninjahandle& handle)
+{
+#ifdef IS_WINDOWS
+    return reinterpret_cast<T*>( handle.file_view );
+#endif
+#ifdef IS_LINUX
+    return reinterpret_cast<T*>( handle.file_mapping );
+#endif
+}
+
 } // namespace ninjaipc
 #endif // _NINJA_IPC_HPP_
