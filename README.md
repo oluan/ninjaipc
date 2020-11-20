@@ -10,14 +10,36 @@
 
 
 ```cpp
-ninjahandle ipc = ninjaipc::connect( "ninjaipc" );
+ninjahandle ipc = ninjaipc::create_server( "ninjaipc" );
 
 ninjaipc::listen( ipc, [ ipc ]( void* request_content ) -> void
 {
     std::cout << "Request received!" << std::endl;
+    
+    github* content = (github*)request_content;
+    std::cout << content->author std::endl;
+    
     ninjaipc::acknowledge_request( ipc );
 });
 ```
+
+
+
+```cpp
+struct github
+{
+    int stars{};
+    char author[25];
+}
+
+github oluan = { +1 , "oluan" };
+
+ninjahandle ipc = ninjaipc::connect( "ninjaipc" );
+
+ninjaipc::send_request<github>(ipc, oluan);
+```
+
+
 
 ### ✨ [Demo](https://github.com/oluan/ninjaipc/tree/main/example)
 
@@ -39,6 +61,7 @@ Give a ⭐️ if this project helped you!
 ## 📝 License
 
 Copyright © 2020 [luan devecchi](https://github.com/oluan).
-This project is [Apache-2.0 License](https://github.com/oluan/ninjaipc/blob/main/LICENSE) licensed.
+This project is [Apache--2.0 License](https://github.com/oluan/ninjaipc/blob/main/LICENSE) licensed.
 
 ***
+
