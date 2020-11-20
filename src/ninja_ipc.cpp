@@ -65,7 +65,7 @@ ninjahandle create_server(const std::string& name, const std::size_t buffer_size
         nullptr,
         PAGE_READWRITE,
         0,
-        buffer_size,
+        static_cast<DWORD>(buffer_size),
         name.c_str()
     );
 
@@ -344,7 +344,7 @@ void listen(const ninjahandle& handle)
         static long long call_n = { 0 };
 
         std::string request_log = { "Requests: " + std::to_string(call_n) };
-        int backspace_amount = request_log.length();
+        std::size_t backspace_amount = request_log.length();
         std::string backspace_block(backspace_amount, '\b');
         std::cout << request_log << backspace_block << std::flush;
 
