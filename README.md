@@ -62,6 +62,3 @@ Give a ⭐️ if this project helped you!
 
 Copyright © 2020 [luan devecchi](https://github.com/oluan).
 This project is [Apache--2.0 License](https://github.com/oluan/ninjaipc/blob/main/LICENSE) licensed.
-
-***
-
