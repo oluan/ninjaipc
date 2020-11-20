@@ -102,7 +102,7 @@ ninjahandle create_server               (const std::string& name, const std::siz
 void        register_server_callback    (ninja_callback callback);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Listens the given handle.
+/// Listens the given IPC handle.
 ///
 /// @author luan devecchi
 /// @date 11/19/2020
