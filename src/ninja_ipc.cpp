@@ -647,5 +647,4 @@ bool send_request(const ninjahandle& handle, void* buffer, std::size_t buffer_si
 #endif
 }
 
-
-} // ninjaipc
+} // namespace ninjaipc
