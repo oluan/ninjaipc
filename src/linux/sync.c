@@ -39,26 +39,32 @@ ninjasync nj_create_sync_obj(const char *object_name) {
   if (sync_obj.obj_handle != SEM_FAILED)
     sync_obj.status = nj_true;
 
-  // // Unlocks it because when it's created
-  // // it's locked already
-  // if (sem_post(sync_obj.obj_handle) != 0)
-  //   sync_obj.status = nj_false;
-
   return sync_obj;
 }
 
 nj_bool nj_notify_sync_obj(ninjasync *sync_obj) {
+  if (NULL == sync_obj)
+    return nj_false;
+
   // Returns nj_true if everything ocurred as expected and nj_false if doesn't.
   return sem_post(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
 
 nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj) {
+  if (NULL == sync_obj)
+    return nj_false;
+
   // Returns nj_true if everything ocurred as expected and nj_false if doesn't.
   return sem_wait(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
 
 nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
                                       unsigned int timeout) {
+  if (NULL == sync_obj)
+    return nj_false;
+
+  if (timeout < 0)
+    return nj_false;
 
   // sem_timedwait uses the timespec structure that supports nanoseconds, so
   // we must convert from miliseconds to timespec format
