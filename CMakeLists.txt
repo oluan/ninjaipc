@@ -5,6 +5,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/dist)
 set(
   SOURCES ${SOURCES}
   examples/ipcexample.c
+  src/ninjall.c
 )
 
 # if(WIN32)
