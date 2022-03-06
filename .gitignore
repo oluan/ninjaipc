@@ -25,7 +25,7 @@ mono_crash.*
 [Rr]eleases/
 x64/
 x86/
-[Ww][Ii][Nn]32/
+# [Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
@@ -363,14 +363,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Temporary REMOVEME
-src/linuxtest.cpp
-src/linuxtestc.cpp
-src/linuxserver
-src/linuxclient
-
 # VSCode Settings
 src/.vscode/settings.json
+settings.json
 
 # CMake
 CMakeLists.txt.user
@@ -388,3 +383,9 @@ _deps
 
 # CMake Build
 dist
+
+# VC++
+*.vcxproj
+*.vcxproj.*
+*.sln
+out/
