@@ -18,9 +18,17 @@
 
 #include "ninjall.h"
 #include "ninjaerr.h"
+#include <memory.h>
 #include <stdlib.h>
 
-ninjall_node *ll_init() { return malloc(sizeof(ninjall_node)); }
+ninjall_node *ll_init() {
+  ninjall_node *head = malloc(sizeof(ninjall_node));
+  if (NULL == head) {
+    return NULL;
+  }
+  memset(head, NULL, sizeof(*head));
+  return head;
+}
 
 nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
   if (NULL == head) {
@@ -32,6 +40,8 @@ nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
   if (NULL == new_node) {
     return nj_false;
   }
+
+  memset(new_node, NULL, sizeof(*head));
 
   new_node->func = ptr;
 
