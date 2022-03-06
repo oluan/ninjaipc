@@ -24,6 +24,14 @@ void unlock_psyncobj() {
     printf("Thread opened sync linux object\n");
   }
 
+  // When you open some semaphore the first value is 0
+  // so we use sem_post to decrement the semaphore value
+  // semaphore cannot be acquired if it's 0
+  // so when we decrement it can be used!
+  if (sem_post(psync_obj.obj_handle) == 0) {
+    printf("Linux sync object unlocked for first use!\n");
+  }
+
   if (nj_wait_notify_sync_obj(&psync_obj) == nj_true) {
     printf("Thread acquired the sync linux object\n");
   }
