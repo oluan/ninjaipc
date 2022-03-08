@@ -45,14 +45,24 @@ int main() {
 
   // CloseHandle(obj.obj_handle);
 
-  ninjaview v = nj_create_view("nj_ipc_view", 1024);
+  ninjaview wrong_v = nj_create_view("", 1024);
 
-  if (v.status == nj_true) {
-    printf("Sucessfully view created!\n");
+  if (wrong_v.status == nj_false) {
+    printf("Not accepted invalid name on view!\n");
   }
   // nj_write_to_view(&v, "Melo48", strlen("Melo48"));
   // nj_write_to_view(&v, "Me", strlen("Me"));
   // nj_write_to_view(&v, "Mel", strlen("Mel"));
+
+  ninjaview v = nj_create_view("ninjaview", 1024);
+
+  if (v.status == nj_true) {
+    printf("View sucessfully created!\n");
+  }
+
+  char text[] = "hello there, this is a simple text.";
+
+  memcpy(v.view_buffer, text, strlen(text) + 1);
 
   printf("View: %d!\nBuffer: %s\n", v.status, (char *)v.view_buffer);
 
