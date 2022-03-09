@@ -26,7 +26,7 @@ ninjall_node *ll_init() {
   if (NULL == head) {
     return NULL;
   }
-  memset(head, NULL, sizeof(*head));
+  memset(head, 0, sizeof(*head));
   return head;
 }
 
@@ -41,7 +41,7 @@ nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
     return nj_false;
   }
 
-  memset(new_node, NULL, sizeof(*head));
+  memset(new_node, 0, sizeof(*head));
 
   new_node->func = ptr;
 

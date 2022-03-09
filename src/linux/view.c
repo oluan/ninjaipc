@@ -18,6 +18,7 @@
 
 #include "../ninjahandle.h"
 #include <fcntl.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -32,18 +33,18 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   }
 
   // Creates the shared memory
-  view.view_fd = shm_open(view_name, O_CREAT | O_RDWR, 0644);
+  view.view_fd = (void *)(uintptr_t)shm_open(view_name, O_CREAT | O_RDWR, 0644);
 
   if (view.view_fd < 0) {
     return view;
   }
 
   // Ensure the size of file descriptor
-  ftruncate(view.view_fd, view.view_size);
+  ftruncate((uintptr_t)view.view_fd, view.view_size);
 
   // Maps the shared memory to the proc memory
   view.view_buffer = mmap(NULL, view.view_size, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, view.view_fd, 0);
+                          MAP_SHARED, (uintptr_t)view.view_fd, 0);
 
   // If has failed to map
   if (MAP_FAILED == view.view_buffer) {
