@@ -44,4 +44,14 @@ int main() {
   printf("Notified!\n");
 
   CloseHandle(obj.obj_handle);
+
+  ninjaview v = nj_create_view("nj_ipc_view", 1024);
+
+  nj_write_to_view(&v, "Melo48", strlen("Melo48"));
+  nj_write_to_view(&v, "Me", strlen("Me"));
+  nj_write_to_view(&v, "Mel", strlen("Mel"));
+
+  printf("View: %d!\nBuffer: %s\n", v.status, (char*)v.view_buffer);
+
+  CloseHandle(v.view_fd);
 }

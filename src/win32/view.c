@@ -18,26 +18,44 @@
 
 #include "../ninjaerr.h"
 #include "../ninjaview.h"
+#include <Windows.h>
 #include <memory.h>
 #include <stdlib.h>
 
-nj_bool nj_write_to_view(ninjaview *view_obj, void *blob,
-                         unsigned int blob_size) {
-  // Set the entire buffer to zero for ensure the message passing
-  // clarity, for not getting any old buffer stuff
-  // if that occur proceed
-  if (memset(view_obj->view_buffer, '\0', view_obj->view_size)) {
-    // If blob not invalid
-    if (blob) {
-      // Copies the blob to the view buffer and returns nj_true
-      // if succesfully copied
-      if (memcpy(view_obj->view_buffer, blob, blob_size)) {
-        return nj_true;
-      }
-    }
-    // Blob invalid
-    return nj_false;
+ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
+  ninjaview view = {.status = nj_false, .view_size = view_size};
+  
+  // If object_name is invalid or empty
+  if (NULL == view_name || strcmp(view_name, "") == 0) {
+    return view;
   }
-  // Memset failed
-  return nj_false;
+
+  // If view size is invalid
+  if (view_size <= 0) {
+    return view;
+  }
+
+  view.view_fd = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                    NULL, view_size, view_name);
+
+  if (NULL == view.view_fd) {
+    return view;
+  }
+
+  if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    CloseHandle(view.view_fd);
+    return view;
+  }
+
+  view.view_buffer =
+      MapViewOfFile(view.view_fd, FILE_MAP_ALL_ACCESS, NULL, NULL, view_size);
+
+  if (NULL == view.view_buffer) {
+    CloseHandle(view.view_fd);
+    return view;
+  }
+
+  view.status = nj_true;
+
+  return view;
 }
