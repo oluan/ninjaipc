@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
-#include "ninjaerr.h"
-#include "ninjall.h"
-#include "ninjasync.h"
-#include "ninjaview.h"
+#ifndef NINJAREQUEST_H
+#define NINJAREQUEST_H
 
-nj_bool notify(ninjall_node *callbacks, ninjaview *view_obj,
-               ninjasync *server_sync_obj, ninjasync *client_sync_obj);
+#include "ninjahandle.h"
+
+nj_bool nj_send_request(ninjahandle *handle, void *buffer, unsigned int buffer_size);
+
+nj_bool nj_ack(ninjahandle *handle);
+
+nj_bool nj_send_response(ninjahandle *handle, void *buffer, unsigned int buffer_size);
+
+#endif
