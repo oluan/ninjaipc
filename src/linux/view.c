@@ -1,10 +1,7 @@
 /**
  * This file is part of the "ninjaipc" project.
  *
- * Copyright (c) 2022
- *
- * Luan Devecchi <luan@engineer.com>
- * Julimar Melo <melobrdev@gmail.com>
+ * Copyright (c) 2022, ninjaipc authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,33 +23,33 @@
 ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   ninjaview view = {.status = nj_false, .view_size = view_size};
 
-  // Invalid view name
+  /* Invalid view name */
   if (NULL == view_name || strcmp(view_name, "") == 0) {
     return view;
   }
 
-  // Creates the shared memory
+  /* Creates the shared memory */
   view.view_fd = shm_open(view_name, O_CREAT | O_RDWR, 0644);
 
   if (view.view_fd < 0) {
     return view;
   }
 
-  // Ensure the size of file descriptor
+  /* Ensure the size of file descriptor */
   ftruncate(view.view_fd, view.view_size);
 
-  // Maps the shared memory to the proc memory
+  /* Maps the shared memory to the proc memory */
   view.view_buffer = mmap(NULL, view.view_size, PROT_READ | PROT_WRITE,
                           MAP_SHARED, view.view_fd, 0);
 
-  // If has failed to map
+  /* If has failed to map */
   if (MAP_FAILED == view.view_buffer) {
     return view;
   }
 
-  // Everything ocurred as expected
+  /* Everything ocurred as expected */
   view.status = nj_true;
 
-  // Returns the view
+  /* Returns the view */
   return view;
 }

@@ -1,10 +1,7 @@
 /**
  * This file is part of the "ninjaipc" project.
  *
- * Copyright (c) 2022
- *
- * Luan Devecchi <luan@engineer.com>
- * Julimar Melo <melobrdev@gmail.com>
+ * Copyright (c) 2022, ninjaipc authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +22,12 @@
 ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   ninjaview view = {.status = nj_false, .view_size = view_size};
   
-  // If object_name is invalid or empty
+  /* If object_name is invalid or empty */
   if (NULL == view_name || strcmp(view_name, "") == 0) {
     return view;
   }
 
-  // If view size is invalid
+  /* If view size is invalid */
   if (view_size <= 0) {
     return view;
   }

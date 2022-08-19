@@ -1,10 +1,7 @@
 /**
  * This file is part of the "ninjaipc" project.
  *
- * Copyright (c) 2022
- *
- * Luan Devecchi <luan@engineer.com>
- * Julimar Melo <melobrdev@gmail.com>
+ * Copyright (c) 2022, ninjaipc authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,17 +24,17 @@ nj_bool __generic_wfso(void *obj, unsigned int timeout) {
 
   DWORD wait_code = WaitForSingleObject(obj, timeout);
 
-  // Timed out
+  /* Timed out */
   if (timeout > 0 && wait_code == WAIT_TIMEOUT) {
     return nj_false;
   }
 
-  // Owner thread did not release event
+  /* Owner thread did not release event */
   if (wait_code == WAIT_ABANDONED) {
     return nj_false;
   }
 
-  // WaitForSingleObject Failed
+  /* WaitForSingleObject Failed */
   if (wait_code == WAIT_FAILED) {
     return nj_false;
   }
@@ -50,25 +47,25 @@ ninjasync nj_create_sync_obj(const char *object_name) {
 
   sync_obj.status = nj_false;
 
-  // If object_name is invalid or empty
+  /* If object_name is invalid or empty */
   if (NULL == object_name || strcmp(object_name, "") == 0)
     return sync_obj;
 
-  // Creates semaphore the returned value is its address
+  /* Creates semaphore the returned value is its address */
   sync_obj.obj_handle = CreateEventA(NULL, 0, 0, object_name);
 
-  // CreateEventA Failed
+  /* CreateEventA Failed */
   if (NULL == sync_obj.obj_handle) {
     return sync_obj;
   }
 
-  // Event already exists
+  /* Event already exists */
   if (GetLastError() == ERROR_ALREADY_EXISTS) {
     CloseHandle(sync_obj.obj_handle);
     return sync_obj;
   }
 
-  // Else it has been created successfully
+  /* Else it has been created successfully */
   sync_obj.status = nj_true;
 
   return sync_obj;

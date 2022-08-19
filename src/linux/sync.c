@@ -1,10 +1,7 @@
 /**
  * This file is part of the "ninjaipc" project.
  *
- * Copyright (c) 2022
- *
- * Luan Devecchi <luan@engineer.com>
- * Julimar Melo <melobrdev@gmail.com>
+ * Copyright (c) 2022, ninjaipc authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +25,14 @@ ninjasync nj_create_sync_obj(const char *object_name) {
 
   sync_obj.status = nj_false;
 
-  // If object_name is invalid or empty
+  /* If object_name is invalid or empty */
   if (NULL == object_name || strcmp(object_name, "") == 0)
     return sync_obj;
 
-  // Creates semaphore the returned value is its address
+  /* Creates semaphore the returned value is its address */
   sync_obj.obj_handle = sem_open(object_name, O_CREAT, 0644, 0);
 
-  // If the semaphore was sucessfully created set the status to success
+  /* If the semaphore was sucessfully created set the status to success */
   if (sync_obj.obj_handle != SEM_FAILED)
     sync_obj.status = nj_true;
 
@@ -46,7 +43,7 @@ nj_bool nj_notify_sync_obj(ninjasync *sync_obj) {
   if (NULL == sync_obj)
     return nj_false;
 
-  // Returns nj_true if everything ocurred as expected and nj_false if doesn't.
+  /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_post(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
 
@@ -54,7 +51,7 @@ nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj) {
   if (NULL == sync_obj)
     return nj_false;
 
-  // Returns nj_true if everything ocurred as expected and nj_false if doesn't.
+  /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_wait(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
 
@@ -66,11 +63,13 @@ nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
   if (timeout < 0)
     return nj_false;
 
-  // sem_timedwait uses the timespec structure that supports nanoseconds, so
-  // we must convert from miliseconds to timespec format
+  /* 
+   * sem_timedwait uses the timespec structure that supports nanoseconds, so
+   * we must convert from miliseconds to timespec format
+   */
   struct timespec time = {.tv_nsec = timeout / 1000,
                           .tv_sec = (timeout % 1000) * 1000000};
 
-  // Returns nj_true if everything ocurred as expected and nj_false if doesn't.
+  /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_timedwait(sync_obj->obj_handle, &time) == 0 ? nj_true : nj_false;
 }

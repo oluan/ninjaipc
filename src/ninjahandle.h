@@ -1,10 +1,7 @@
 /**
  * This file is part of the "ninjaipc" project.
  *
- * Copyright (c) 2022
- *
- * Luan Devecchi <luan@engineer.com>
- * Julimar Melo <melobrdev@gmail.com>
+ * Copyright (c) 2022, ninjaipc authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
