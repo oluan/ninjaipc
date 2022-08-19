@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifndef NINJASYNC_H
+#define NINJASYNC_H
 #include "ninjaerr.h"
 
 typedef struct ninjasync {
@@ -22,9 +24,12 @@ typedef struct ninjasync {
 
 ninjasync nj_create_sync_obj(const char *object_name);
 
+ninjasync nj_open_sync_obj(const char *object_name);
+
 nj_bool nj_notify_sync_obj(ninjasync *sync_obj);
 
 nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj);
 
 nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
                                       unsigned int timeout);
+#endif

@@ -56,3 +56,34 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
 
   return view;
 }
+
+ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
+  ninjaview view = {.status = nj_false, .view_size = view_size};
+  
+  /* If object_name is invalid or empty */
+  if (NULL == view_name || strcmp(view_name, "") == 0) {
+    return view;
+  }
+
+  /* If view size is invalid */
+  if (view_size <= 0) {
+    return view;
+  }
+
+  view.view_fd = OpenFileMappingA(FILE_MAP_ALL_ACCESS, nj_false, view_name);
+
+  if (NULL == view.view_fd) {
+    return view;
+  }
+
+  view.view_buffer = MapViewOfFile(view.view_fd, FILE_MAP_ALL_ACCESS, 0, 0, view_size);
+
+  if (NULL == view.view_buffer) {
+    CloseHandle(view.view_fd);
+    return view;
+  }
+  
+  view.status = nj_true;
+
+  return view;
+}

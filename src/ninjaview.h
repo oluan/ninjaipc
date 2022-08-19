@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
+#ifndef NINJAVIEW_H
+#define NINJAVIEW_H
 #include "ninjaerr.h"
 #include <memory.h>
+#include <stdio.h>
 
 typedef struct ninjaview {
   void *view_fd;
@@ -24,6 +27,8 @@ typedef struct ninjaview {
 } ninjaview;
 
 ninjaview nj_create_view(const char *view_name, unsigned int view_size);
+
+ninjaview nj_open_view(const char *view_name, unsigned int view_size);
 
 inline nj_bool nj_write_to_view(ninjaview *view_obj, void *blob,
                                 unsigned int blob_size) {
@@ -45,3 +50,4 @@ inline nj_bool nj_write_to_view(ninjaview *view_obj, void *blob,
   /* Memset failed */
   return nj_false;
 }
+#endif

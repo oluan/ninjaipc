@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef NINJAERR_H
+#define NINJAERR_H
 #define nj_bool int
 #define nj_true 1
 #define nj_false 0
+#endif

@@ -13,25 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef NINJAHANDLE_H
-#define NINJAHANDLE_H
-#include "ninjall.h"
-#include "ninjasync.h"
-#include "ninjaview.h"
+#ifndef NINJALISTEN_H
+#define NINJALISTEN_H
+#include "ninjaerr.h"
+#include "ninjahandle.h"
 
-typedef struct ninjahandle {
-  ninjasync sync_obj;
-
-  ninjaview view_obj;
-
-  ninjall_node *callbacks;
-
-  nj_bool status;
-} ninjahandle;
-
-
-ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size);
-
-ninjahandle nj_open_ipc(const char *ipc_name, unsigned int ipc_size);
-
+nj_bool nj_listen(ninjahandle *handle);
 #endif

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifndef NINJALL_H
+#define NINJALL_H
 #include "ninjaerr.h"
 
 typedef void (*callback)(const char *);
@@ -25,3 +27,4 @@ typedef struct llnode {
 ninjall_node *ll_init();
 nj_bool ll_register_callback(ninjall_node *head, callback ptr);
 nj_bool ll_notify_all_callbacks(ninjall_node *head, const char *content);
+#endif

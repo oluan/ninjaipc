@@ -52,7 +52,7 @@ ninjasync nj_create_sync_obj(const char *object_name) {
     return sync_obj;
 
   /* Creates semaphore the returned value is its address */
-  sync_obj.obj_handle = CreateEventA(NULL, 0, 0, object_name);
+  sync_obj.obj_handle = CreateEventA(NULL, nj_false, nj_false, object_name);
 
   /* CreateEventA Failed */
   if (NULL == sync_obj.obj_handle) {
@@ -66,6 +66,26 @@ ninjasync nj_create_sync_obj(const char *object_name) {
   }
 
   /* Else it has been created successfully */
+  sync_obj.status = nj_true;
+
+  return sync_obj;
+}
+
+ninjasync nj_open_sync_obj(const char *object_name) {
+  ninjasync sync_obj;
+
+  sync_obj.status = nj_false;
+
+  /* If object_name is invalid or empty */
+  if (NULL == object_name || strcmp(object_name, "") == 0)
+    return sync_obj;
+
+  sync_obj.obj_handle = OpenEventA(EVENT_ALL_ACCESS, nj_false, object_name);
+
+  if (NULL == sync_obj.obj_handle) {
+    return sync_obj;
+  }
+
   sync_obj.status = nj_true;
 
   return sync_obj;
