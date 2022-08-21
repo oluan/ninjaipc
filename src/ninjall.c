@@ -23,26 +23,29 @@ ninjall_node *ll_init() {
   if (NULL == head) {
     return NULL;
   }
-  memset(head, NULL, sizeof(*head));
+  memset(head, 0, sizeof(*head));
   return head;
 }
 
 nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
+  ninjall_node *new_node;
+  ninjall_node *last;
+ 
   if (NULL == head) {
     return nj_false;
   }
 
-  ninjall_node *new_node = malloc(sizeof(*head));
+  new_node = malloc(sizeof(*head));
 
   if (NULL == new_node) {
     return nj_false;
   }
 
-  memset(new_node, NULL, sizeof(*head));
+  memset(new_node, 0, sizeof(*head));
 
   new_node->func = ptr;
 
-  ninjall_node *last = head;
+  last = head;
 
   while (last->next) {
     last = last->next;
@@ -54,14 +57,13 @@ nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
 }
 
 nj_bool ll_notify_all_callbacks(ninjall_node *head, const char *content) {
+  ninjall_node *current = NULL;
+ 
   if (NULL == head) {
     return nj_false;
   }
 
-  ninjall_node *current = NULL;
-
   /* first node should be reserved for implementation */
-
   for (current = head; current; current = current->next) {
     if (current->func) {
       current->func(content);

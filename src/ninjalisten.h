@@ -19,4 +19,5 @@
 #include "ninjahandle.h"
 
 nj_bool nj_listen(ninjahandle *handle);
+nj_bool nj_listen_until(ninjahandle *handle, nj_bool *ptermination_flag);
 #endif

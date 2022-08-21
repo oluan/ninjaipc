@@ -19,6 +19,8 @@
 #include <semaphore.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <linux/time.h>
+#include <stdlib.h>
 
 ninjasync nj_create_sync_obj(const char *object_name) {
   ninjasync sync_obj;
@@ -33,8 +35,36 @@ ninjasync nj_create_sync_obj(const char *object_name) {
   sync_obj.obj_handle = sem_open(object_name, O_CREAT, 0644, 0);
 
   /* If the semaphore was sucessfully created set the status to success */
-  if (sync_obj.obj_handle != SEM_FAILED)
+  if (sync_obj.obj_handle != SEM_FAILED) {
+    /* sem_unlink(object_name); */
+    {
+      char *name = (char*)malloc(strlen(object_name) + 1);
+      strcpy(name, object_name);
+      sync_obj.obj_name = name;
+    }
     sync_obj.status = nj_true;
+  }
+
+  return sync_obj;
+}
+
+ninjasync nj_open_sync_obj(const char *object_name) {
+  ninjasync sync_obj;
+
+  sync_obj.status = nj_false;
+
+  /* If object_name is invalid or empty */
+  if (NULL == object_name || strcmp(object_name, "") == 0)
+    return sync_obj;
+
+  sync_obj.obj_handle = sem_open(object_name, 0);
+
+  if (SEM_FAILED == sync_obj.obj_handle) {
+    printf("Failed :)\n");
+    return sync_obj;
+  }
+
+  sync_obj.status = nj_true;
 
   return sync_obj;
 }
@@ -43,6 +73,7 @@ nj_bool nj_notify_sync_obj(ninjasync *sync_obj) {
   if (NULL == sync_obj)
     return nj_false;
 
+  printf("Calling sem_post with %p\n", sync_obj->obj_handle);
   /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_post(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
@@ -51,12 +82,16 @@ nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj) {
   if (NULL == sync_obj)
     return nj_false;
 
+  printf("Calling sem_wait with %p\n", sync_obj->obj_handle);
+
   /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_wait(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
 
 nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
                                       unsigned int timeout) {
+  struct timespec time;
+
   if (NULL == sync_obj)
     return nj_false;
 
@@ -67,9 +102,25 @@ nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
    * sem_timedwait uses the timespec structure that supports nanoseconds, so
    * we must convert from miliseconds to timespec format
    */
-  struct timespec time = {.tv_nsec = timeout / 1000,
-                          .tv_sec = (timeout % 1000) * 1000000};
+  time.tv_nsec = timeout / 1000;
+  time.tv_sec = (timeout % 1000) * 1000000;
 
   /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_timedwait(sync_obj->obj_handle, &time) == 0 ? nj_true : nj_false;
+}
+
+void nj_free_sync_obj(ninjasync *sync_obj) {
+  printf("free sync beg2\n");
+  /* FIXME */
+  printf("%p <- %d sem_post\n", sync_obj->obj_handle, sem_post(sync_obj->obj_handle));
+  sem_unlink(sync_obj->obj_name);
+  sleep(1);
+  /*
+  sem_close(sync_obj->obj_handle);
+  sync_obj->obj_handle = NULL;
+  sem_unlink(sync_obj->obj_name);
+  printf("freeing %p\n", sync_obj->obj_name);
+  */
+  free(sync_obj->obj_name);
+  printf("free sync end\n");
 }
