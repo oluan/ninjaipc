@@ -52,10 +52,8 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
     return view;
   }
 
-  obj_name = (char*)malloc(strlen(view_name) + 1);
-  strcpy(obj_name, view_name);
-
-  view.view_name = obj_name;
+  view.view_name = (char*)malloc(strlen(view_name) + 1);
+  strcpy(view.view_name, view_name);
 
   /* Everything ocurred as expected */
   view.status = nj_true;
@@ -84,6 +82,9 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
   /* Maps the shared memory to the proc memory */
   view.view_buffer = mmap(NULL, view.view_size, PROT_READ | PROT_WRITE,
                           MAP_SHARED, (unsigned long)view.view_fd, 0);
+
+  view.view_name = (char*)malloc(strlen(view_name) + 1);
+  strcpy(view.view_name, view_name);
 
   view.status = nj_true;
 
