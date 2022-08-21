@@ -19,6 +19,9 @@
 #include "../ninjall.h"
 #include "../ninjasync.h"
 #include "../ninjaview.h"
+#ifndef _WIN32
+#include <errno.h>
+#endif
 
 nj_bool __listen(ninjahandle *handle) {
   nj_bool sync_status;
@@ -26,6 +29,10 @@ nj_bool __listen(ninjahandle *handle) {
   sync_status = nj_wait_notify_sync_obj(&handle->sync_obj);
 
   if (sync_status == nj_false) {
+#ifndef _WIN32
+    /* close semaphore so we don't leak */
+    if (errno == EINTR) sem_close(handle->sync_obj.obj_handle);
+#endif
     return sync_status;
   }
 

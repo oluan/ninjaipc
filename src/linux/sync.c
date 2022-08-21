@@ -36,7 +36,6 @@ ninjasync nj_create_sync_obj(const char *object_name) {
 
   /* If the semaphore was sucessfully created set the status to success */
   if (sync_obj.obj_handle != SEM_FAILED) {
-    /* sem_unlink(object_name); */
     {
       char *name = (char *)malloc(strlen(object_name) + 1);
       strcpy(name, object_name);
@@ -104,5 +103,4 @@ nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
 void nj_free_sync_obj(ninjasync *sync_obj) {
   sem_unlink(sync_obj->obj_name);
   free(sync_obj->obj_name);
-  /* TODO: sem_close semaphore (must sync with listen.c) */
 }
