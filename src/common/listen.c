@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+
 #include "../ninjalisten.h"
+#include "../ninjall.h"
 #include "../ninjasync.h"
 #include "../ninjaview.h"
-#include "../ninjall.h"
-#include <stdio.h>
 
 nj_bool __listen(ninjahandle *handle) {
   nj_bool sync_status;
@@ -28,7 +29,8 @@ nj_bool __listen(ninjahandle *handle) {
     return sync_status;
   }
 
-  ll_notify_all_callbacks(handle->callbacks, (char*)handle->view_obj.view_buffer);
+  ll_notify_all_callbacks(handle->callbacks,
+                          (char *)handle->view_obj.view_buffer);
 }
 
 nj_bool nj_listen_until(ninjahandle *handle, nj_bool *ptermination_flag) {
@@ -37,7 +39,7 @@ nj_bool nj_listen_until(ninjahandle *handle, nj_bool *ptermination_flag) {
   }
 
   for (;;) {
-    if (ptermination_flag != (nj_bool*)-1 && *ptermination_flag) {
+    if (ptermination_flag != (nj_bool *)-1 && *ptermination_flag) {
       break;
     }
     if (!__listen(handle)) {
@@ -45,9 +47,9 @@ nj_bool nj_listen_until(ninjahandle *handle, nj_bool *ptermination_flag) {
     }
   }
 
-  return ptermination_flag == (nj_bool*)-1 ? nj_false : nj_true;
+  return ptermination_flag == (nj_bool *)-1 ? nj_false : nj_true;
 }
 
 nj_bool nj_listen(ninjahandle *handle) {
-  return nj_listen_until(handle, (nj_bool*)-1);
+  return nj_listen_until(handle, (nj_bool *)-1);
 }

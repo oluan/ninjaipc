@@ -24,9 +24,8 @@ typedef struct ninjahandle {
   ninjaview view_obj;
   ninjall_node *callbacks;
   nj_bool status;
-  char* name;
+  char *name;
 } ninjahandle;
-
 
 ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size);
 
