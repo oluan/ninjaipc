@@ -11,5 +11,5 @@ int main() {
 
   puts("Okie");
 
-  nj_send_request(&ipc_handle, "end", 4);
+  nj_send_message(&ipc_handle, "end", 4);
 }
