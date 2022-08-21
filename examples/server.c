@@ -19,9 +19,12 @@ void data_callback(const char* data) {
 }
 
 void cleanup(int sig) {
-  should_end = 1;
-  nj_free_handle(&ipc_handle);
-  printf("after cleanup\n");
+  static int didclean = 0;
+  if (!didclean) {
+    didclean = 1;
+    should_end = 1;
+    nj_free_handle(&ipc_handle);
+  }
 }
 
 int create_ipc() {
@@ -47,4 +50,6 @@ int main() {
   signal(SIGINT, cleanup);
 
 	nj_listen_until(&ipc_handle, &should_end);
+
+  cleanup(0);
 }
