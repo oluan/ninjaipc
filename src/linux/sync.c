@@ -59,10 +59,8 @@ ninjasync nj_open_sync_obj(const char *object_name) {
 
   sync_obj.obj_handle = sem_open(object_name, 0);
 
-  if (SEM_FAILED == sync_obj.obj_handle) {
-    printf("Failed :)\n");
+  if (SEM_FAILED == sync_obj.obj_handle)
     return sync_obj;
-  }
 
   sync_obj.status = nj_true;
 
@@ -73,7 +71,6 @@ nj_bool nj_notify_sync_obj(ninjasync *sync_obj) {
   if (NULL == sync_obj)
     return nj_false;
 
-  printf("Calling sem_post with %p\n", sync_obj->obj_handle);
   /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_post(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
 }
@@ -81,8 +78,6 @@ nj_bool nj_notify_sync_obj(ninjasync *sync_obj) {
 nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj) {
   if (NULL == sync_obj)
     return nj_false;
-
-  printf("Calling sem_wait with %p\n", sync_obj->obj_handle);
 
   /* Returns nj_true if everything ocurred as expected and nj_false if doesn't. */
   return sem_wait(sync_obj->obj_handle) == 0 ? nj_true : nj_false;
@@ -110,17 +105,7 @@ nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
 }
 
 void nj_free_sync_obj(ninjasync *sync_obj) {
-  printf("free sync beg2\n");
-  /* FIXME */
-  printf("%p <- %d sem_post\n", sync_obj->obj_handle, sem_post(sync_obj->obj_handle));
   sem_unlink(sync_obj->obj_name);
-  sleep(1);
-  /*
-  sem_close(sync_obj->obj_handle);
-  sync_obj->obj_handle = NULL;
-  sem_unlink(sync_obj->obj_name);
-  printf("freeing %p\n", sync_obj->obj_name);
-  */
   free(sync_obj->obj_name);
-  printf("free sync end\n");
+  /* TODO: sem_close semaphore (must sync with listen.c) */
 }

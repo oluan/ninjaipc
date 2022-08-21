@@ -91,11 +91,8 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
 }
 
 nj_bool nj_free_view(ninjaview *pview) {
-  printf("free view beg\n");
   shm_unlink(pview->view_name);
   munmap(pview->view_buffer, pview->view_size);
   close((unsigned long)pview->view_fd);
-  printf("freeing view name %p\n", pview->view_name);
   free(pview->view_name);
-  printf("free view end\n");
 }
