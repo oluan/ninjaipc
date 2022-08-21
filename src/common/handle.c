@@ -14,6 +14,7 @@
  */
 
 #include "../ninjahandle.h"
+#include <stdlib.h>
 
 ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
   ninjahandle handle;
@@ -71,10 +72,7 @@ ninjahandle nj_open_ipc(const char *ipc_name, unsigned int ipc_size) {
 }
 
 void nj_free_handle(ninjahandle *phandle) {
-  printf("freed %s %s %s\n", phandle->name, phandle->view_obj.view_name, phandle->sync_obj.obj_name);
   nj_free_view(&phandle->view_obj);
   nj_free_sync_obj(&phandle->sync_obj);
-  printf("freeing handle name %p\n", phandle->name);
   free(phandle->name);
-  printf("segfault dbg\n");
 }

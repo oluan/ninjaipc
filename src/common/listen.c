@@ -22,11 +22,7 @@
 nj_bool __listen(ninjahandle *handle) {
   nj_bool sync_status;
 
-  printf("__listen: waiting for %p - %p\n", &handle->sync_obj, handle->sync_obj.obj_handle);
-
   sync_status = nj_wait_notify_sync_obj(&handle->sync_obj);
-
-  printf("__listen: notified\n");
 
   if (sync_status == nj_false) {
     return sync_status;
@@ -39,8 +35,6 @@ nj_bool nj_listen_until(ninjahandle *handle, nj_bool *ptermination_flag) {
   if (NULL == handle) {
     return nj_false;
   }
-
-  printf("nj_listen_until: %p %p %p\n", &handle->view_obj, &handle->sync_obj.obj_handle, handle->callbacks);
 
   for (;;) {
     if (ptermination_flag != (nj_bool*)-1 && *ptermination_flag) {
