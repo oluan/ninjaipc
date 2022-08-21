@@ -14,9 +14,11 @@
  */
 
 #include "ninjall.h"
-#include "ninjaerr.h"
+
 #include <memory.h>
 #include <stdlib.h>
+
+#include "ninjaerr.h"
 
 ninjall_node *ll_init() {
   ninjall_node *head = malloc(sizeof(ninjall_node));
@@ -30,7 +32,7 @@ ninjall_node *ll_init() {
 nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
   ninjall_node *new_node;
   ninjall_node *last;
- 
+
   if (NULL == head) {
     return nj_false;
   }
@@ -58,7 +60,7 @@ nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
 
 nj_bool ll_notify_all_callbacks(ninjall_node *head, const char *content) {
   ninjall_node *current = NULL;
- 
+
   if (NULL == head) {
     return nj_false;
   }

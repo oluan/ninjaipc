@@ -15,9 +15,10 @@
 
 #ifndef NINJAVIEW_H
 #define NINJAVIEW_H
-#include "ninjaerr.h"
 #include <memory.h>
 #include <stdio.h>
+
+#include "ninjaerr.h"
 
 typedef struct ninjaview {
   void *view_fd;

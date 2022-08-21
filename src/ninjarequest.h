@@ -18,10 +18,12 @@
 
 #include "ninjahandle.h"
 
-nj_bool nj_send_request(ninjahandle *handle, void *buffer, unsigned int buffer_size);
+nj_bool nj_send_request(ninjahandle *handle, void *buffer,
+                        unsigned int buffer_size);
 
 nj_bool nj_ack(ninjahandle *handle);
 
-nj_bool nj_send_response(ninjahandle *handle, void *buffer, unsigned int buffer_size);
+nj_bool nj_send_response(ninjahandle *handle, void *buffer,
+                         unsigned int buffer_size);
 
 #endif

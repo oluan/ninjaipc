@@ -15,7 +15,8 @@
 
 #include "../ninjarequest.h"
 
-nj_bool nj_send_request(ninjahandle *handle, void *buffer, unsigned int buffer_size) {
+nj_bool nj_send_request(ninjahandle *handle, void *buffer,
+                        unsigned int buffer_size) {
   if (handle->status == nj_false) {
     return nj_false;
   }
@@ -40,8 +41,9 @@ nj_bool nj_ack(ninjahandle *handle) {
   return nj_notify_sync_obj(&handle->sync_obj);
 }
 
-nj_bool nj_send_response(ninjahandle *handle, void *buffer, unsigned int buffer_size) {
-   if (handle->status == nj_false) {
+nj_bool nj_send_response(ninjahandle *handle, void *buffer,
+                         unsigned int buffer_size) {
+  if (handle->status == nj_false) {
     return nj_false;
   }
 

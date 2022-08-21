@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "../ninjahandle.h"
 #include <stdlib.h>
+
+#include "../ninjahandle.h"
 
 ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
   ninjahandle handle;
@@ -29,7 +30,7 @@ ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
   }
 
   strcat(sync_obj_name, ipc_name);
-  
+
   handle.sync_obj = nj_create_sync_obj(sync_obj_name);
 
   if (handle.sync_obj.status == nj_false) {
@@ -37,7 +38,7 @@ ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
     return handle;
   }
 
-  handle.name = (char*)malloc(strlen(ipc_name));
+  handle.name = (char *)malloc(strlen(ipc_name));
   strcpy(handle.name, ipc_name);
 
   handle.status = nj_true;

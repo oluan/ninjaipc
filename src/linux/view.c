@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#include "../ninjahandle.h"
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
+
+#include "../ninjahandle.h"
 
 ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   char *obj_name;
@@ -33,7 +34,8 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   }
 
   /* Creates the shared memory */
-  view.view_fd = (void*)((unsigned long)shm_open(view_name, O_CREAT | O_RDWR, 0644));
+  view.view_fd =
+      (void *)((unsigned long)shm_open(view_name, O_CREAT | O_RDWR, 0644));
 
   if ((unsigned long)view.view_fd < 0) {
     return view;
@@ -52,7 +54,7 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
     return view;
   }
 
-  view.view_name = (char*)malloc(strlen(view_name) + 1);
+  view.view_name = (char *)malloc(strlen(view_name) + 1);
   strcpy(view.view_name, view_name);
 
   /* Everything ocurred as expected */
@@ -73,7 +75,7 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
   }
 
   /* Creates the shared memory */
-  view.view_fd = (void*)((unsigned long)shm_open(view_name, O_RDWR, 0644));
+  view.view_fd = (void *)((unsigned long)shm_open(view_name, O_RDWR, 0644));
 
   if ((unsigned long)view.view_fd < 0) {
     return view;
@@ -83,7 +85,7 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
   view.view_buffer = mmap(NULL, view.view_size, PROT_READ | PROT_WRITE,
                           MAP_SHARED, (unsigned long)view.view_fd, 0);
 
-  view.view_name = (char*)malloc(strlen(view_name) + 1);
+  view.view_name = (char *)malloc(strlen(view_name) + 1);
   strcpy(view.view_name, view_name);
 
   view.status = nj_true;

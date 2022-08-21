@@ -16,7 +16,7 @@
 #include "ninjaview.h"
 
 nj_bool nj_write_to_view(ninjaview *view_obj, void *blob,
-                                unsigned int blob_size) {
+                         unsigned int blob_size) {
   /* Clear buffer */
   if (memset(view_obj->view_buffer, '\0', view_obj->view_size)) {
     /* If blob not invalid */
