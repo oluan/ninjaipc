@@ -26,7 +26,7 @@ nj_bool nj_send_request(ninjahandle *handle, void *buffer, unsigned int buffer_s
 
   nj_notify_sync_obj(&handle->sync_obj);
 
-  nj_wait_notify_sync_obj(&handle->sync_obj);
+  /* nj_wait_notify_sync_obj(&handle->sync_obj); */
 
   return nj_true;
 }

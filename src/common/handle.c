@@ -14,14 +14,12 @@
  */
 
 #include "../ninjahandle.h"
-#include <Windows.h>
-
-#define TAG_SYNC_OBJ(x, y) \
-char x[256] = "nj_ipc_sync_"; \
-strcat_s(x, sizeof(x), y); \
 
 ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
-  ninjahandle handle = { .status = nj_false };
+  ninjahandle handle;
+  char sync_obj_name[256] = "nj_ipc_sync_";
+
+  handle.status = nj_false;
 
   handle.view_obj = nj_create_view(ipc_name, ipc_size);
 
@@ -29,13 +27,41 @@ ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
     return handle;
   }
 
-  TAG_SYNC_OBJ(sync_obj_name, ipc_name);
-
+  strcat(sync_obj_name, ipc_name);
+  
   handle.sync_obj = nj_create_sync_obj(sync_obj_name);
 
   if (handle.sync_obj.status == nj_false) {
-    UnmapViewOfFile(handle.view_obj.view_buffer);
-    CloseHandle(handle.view_obj.view_fd);
+    nj_free_view(&handle.view_obj);
+    return handle;
+  }
+
+  handle.name = (char*)malloc(strlen(ipc_name));
+  strcpy(handle.name, ipc_name);
+
+  handle.status = nj_true;
+
+  return handle;
+}
+
+ninjahandle nj_open_ipc(const char *ipc_name, unsigned int ipc_size) {
+  ninjahandle handle;
+  char sync_obj_name[256] = "nj_ipc_sync_";
+
+  handle.status = nj_false;
+
+  handle.view_obj = nj_open_view(ipc_name, ipc_size);
+
+  if (handle.view_obj.status == nj_false) {
+    return handle;
+  }
+
+  strcat(sync_obj_name, ipc_name);
+
+  handle.sync_obj = nj_open_sync_obj(sync_obj_name);
+
+  if (handle.sync_obj.status == nj_false) {
+    nj_free_view(&handle.view_obj);
     return handle;
   }
 
@@ -44,25 +70,11 @@ ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
   return handle;
 }
 
-ninjahandle nj_open_ipc(const char *ipc_name, unsigned int ipc_size) {
-  ninjahandle handle = { .status = nj_false };
-
-  handle.view_obj = nj_open_view(ipc_name, ipc_size);
-
-  if (handle.view_obj.status == nj_false) {
-    return handle;
-  }
-
-  TAG_SYNC_OBJ(sync_obj_name, ipc_name);
-  handle.sync_obj = nj_open_sync_obj(sync_obj_name);
-
-  if (handle.sync_obj.status == nj_false) {
-    UnmapViewOfFile(handle.view_obj.view_buffer);
-    CloseHandle(handle.view_obj.view_fd);
-    return handle;
-  }
-
-  handle.status = nj_true;
-
-  return handle;
+void nj_free_handle(ninjahandle *phandle) {
+  printf("freed %s %s %s\n", phandle->name, phandle->view_obj.view_name, phandle->sync_obj.obj_name);
+  nj_free_view(&phandle->view_obj);
+  nj_free_sync_obj(&phandle->sync_obj);
+  printf("freeing handle name %p\n", phandle->name);
+  free(phandle->name);
+  printf("segfault dbg\n");
 }

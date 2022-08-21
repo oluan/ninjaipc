@@ -13,25 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef NINJAHANDLE_H
-#define NINJAHANDLE_H
-#include "ninjall.h"
-#include "ninjasync.h"
 #include "ninjaview.h"
 
-typedef struct ninjahandle {
-  ninjasync sync_obj;
-  ninjaview view_obj;
-  ninjall_node *callbacks;
-  nj_bool status;
-  char* name;
-} ninjahandle;
-
-
-ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size);
-
-ninjahandle nj_open_ipc(const char *ipc_name, unsigned int ipc_size);
-
-void nj_free_handle(ninjahandle *phandle);
-
-#endif
+nj_bool nj_write_to_view(ninjaview *view_obj, void *blob,
+                                unsigned int blob_size) {
+  /* Clear buffer */
+  if (memset(view_obj->view_buffer, '\0', view_obj->view_size)) {
+    /* If blob not invalid */
+    if (blob) {
+      /*
+       * Copies the blob to the view buffer and returns nj_true
+       * if succesfully copied
+       */
+      if (memcpy(view_obj->view_buffer, blob, blob_size)) {
+        return nj_true;
+      }
+    }
+    /* Blob invalid */
+    return nj_false;
+  }
+  /* Memset failed */
+  return nj_false;
+}

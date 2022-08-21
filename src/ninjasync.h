@@ -20,6 +20,7 @@
 typedef struct ninjasync {
   void *obj_handle;
   nj_bool status;
+  char *obj_name;
 } ninjasync;
 
 ninjasync nj_create_sync_obj(const char *object_name);
@@ -32,4 +33,6 @@ nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj);
 
 nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
                                       unsigned int timeout);
+
+void nj_free_sync_obj(ninjasync *sync_obj);
 #endif
