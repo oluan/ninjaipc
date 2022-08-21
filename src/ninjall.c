@@ -74,3 +74,32 @@ nj_bool ll_notify_all_callbacks(ninjall_node *head, const char *content) {
 
   return nj_true;
 }
+
+nj_bool ll_unregister_callback(ninjall_node *head, callback ptr) {
+  ninjall_node *last = NULL;
+  ninjall_node *current = NULL;
+
+  /* just check the first one*/
+  if(head->func == ptr) {
+    last = head;
+    /* skips the node */
+    head = head->next;
+    free(last);
+    return nj_true;
+  }
+
+  for(current = head; current; current = current->next) {
+    /* find the callback and compares to the callback to be removed*/
+    if(current->next->func == ptr) {
+      last = current->next;
+      current->next = current->next->next;
+      free(last);
+
+      /* found the callback and skipped it */
+      return nj_true;
+    }
+  }
+
+  /* not found the callback */
+  return nj_false;
+}
