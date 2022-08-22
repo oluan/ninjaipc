@@ -34,4 +34,7 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size);
 
 nj_bool nj_free_view(ninjaview *pview);
 
+nj_bool nj_write_to_view(ninjaview *view_obj, void *blob,
+                         unsigned int blob_size);
+
 #endif

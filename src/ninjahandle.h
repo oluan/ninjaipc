@@ -20,7 +20,8 @@
 #include "ninjaview.h"
 
 typedef struct ninjahandle {
-  ninjasync sync_obj;
+  ninjasync client_sync_obj;
+  ninjasync server_sync_obj;
   ninjaview view_obj;
   ninjall_node *callbacks;
   nj_bool status;

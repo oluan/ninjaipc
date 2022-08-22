@@ -14,9 +14,10 @@
  */
 
 #include "../ninjarequest.h"
+#include "../ninjaview.h"
 
 nj_bool ___send_message(ninjahandle *handle, void *buffer,
-                        unsigned int buffer_size) {
+                        unsigned int buffer_size, nj_bool should_notify_client) {
   if (handle->status == nj_false) {
     return nj_false;
   }
@@ -25,19 +26,23 @@ nj_bool ___send_message(ninjahandle *handle, void *buffer,
     return nj_false;
   }
 
-  nj_notify_sync_obj(&handle->sync_obj);
-
-  /* nj_wait_notify_sync_obj(&handle->sync_obj); */
+  if (should_notify_client) {
+    nj_notify_sync_obj(&handle->client_sync_obj);
+  }
+  else {
+    nj_notify_sync_obj(&handle->server_sync_obj);
+    nj_wait_notify_sync_obj(&handle->client_sync_obj);
+  }
 
   return nj_true;
 }
 
 nj_bool nj_send_request(ninjahandle *handle, void *buffer, unsigned int buffer_size) {
-  return ___send_message(handle, buffer, buffer_size);
+  return ___send_message(handle, buffer, buffer_size, nj_false);
 }
 
 nj_bool nj_send_response(ninjahandle *handle, void* buffer, unsigned int buffer_size) {
-  return ___send_message(handle, buffer, buffer_size);
+  return ___send_message(handle, buffer, buffer_size, nj_true);
 }
 
 nj_bool nj_ack(ninjahandle *handle) {
@@ -46,5 +51,5 @@ nj_bool nj_ack(ninjahandle *handle) {
   }
 
   memset(handle->view_obj.view_buffer, 0, handle->view_obj.view_size);
-  return nj_notify_sync_obj(&handle->sync_obj);
+  return nj_notify_sync_obj(&handle->client_sync_obj);
 }
