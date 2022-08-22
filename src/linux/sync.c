@@ -22,6 +22,7 @@
 
 #include "../ninjaerr.h"
 #include "../ninjasync.h"
+#include "../ninjavalidators.h"
 
 ninjasync nj_create_sync_obj(const char *object_name) {
   ninjasync sync_obj;
@@ -29,7 +30,7 @@ ninjasync nj_create_sync_obj(const char *object_name) {
   sync_obj.status = nj_false;
 
   /* If object_name is invalid or empty */
-  if (NULL == object_name || strcmp(object_name, "") == 0) return sync_obj;
+  if (NJ_INVALID_STRING(object_name)) return sync_obj;
 
   /* Creates semaphore the returned value is its address */
   sync_obj.obj_handle = sem_open(object_name, O_CREAT, 0644, 0);
@@ -53,7 +54,7 @@ ninjasync nj_open_sync_obj(const char *object_name) {
   sync_obj.status = nj_false;
 
   /* If object_name is invalid or empty */
-  if (NULL == object_name || strcmp(object_name, "") == 0) return sync_obj;
+  if (NJ_INVALID_STRING(object_name)) return sync_obj;
 
   sync_obj.obj_handle = sem_open(object_name, 0);
 

@@ -17,6 +17,7 @@
 
 #include "../ninjaerr.h"
 #include "../ninjasync.h"
+#include "../ninjavalidators.h"
 
 nj_bool __generic_wfso(void *obj, unsigned int timeout) {
   if (NULL == obj) {
@@ -49,7 +50,7 @@ ninjasync nj_create_sync_obj(const char *object_name) {
   sync_obj.status = nj_false;
 
   /* If object_name is invalid or empty */
-  if (NULL == object_name || strcmp(object_name, "") == 0) return sync_obj;
+  if (NJ_INVALID_STRING(object_name)) return sync_obj;
 
   /* Creates semaphore the returned value is its address */
   sync_obj.obj_handle = CreateEventA(NULL, nj_false, nj_false, object_name);
@@ -77,7 +78,7 @@ ninjasync nj_open_sync_obj(const char *object_name) {
   sync_obj.status = nj_false;
 
   /* If object_name is invalid or empty */
-  if (NULL == object_name || strcmp(object_name, "") == 0) return sync_obj;
+  if (NJ_INVALID_STRING(object_name)) return sync_obj;
 
   sync_obj.obj_handle = OpenEventA(EVENT_ALL_ACCESS, nj_false, object_name);
 
