@@ -20,24 +20,27 @@
 #include "../ninjasync.h"
 #include "../ninjaview.h"
 #ifndef _WIN32
+#include <semaphore.h>
 #include <errno.h>
 #endif
 
 nj_bool __listen(ninjahandle *handle) {
   nj_bool sync_status;
 
-  sync_status = nj_wait_notify_sync_obj(&handle->sync_obj);
+  sync_status = nj_wait_notify_sync_obj(&handle->server_sync_obj);
 
   if (sync_status == nj_false) {
 #ifndef _WIN32
     /* close semaphore so we don't leak */
-    if (errno == EINTR) sem_close(handle->sync_obj.obj_handle);
+    if (errno == EINTR) sem_close(handle->server_sync_obj.obj_handle);
 #endif
     return sync_status;
   }
 
   ll_notify_all_callbacks(handle->callbacks,
                           (char *)handle->view_obj.view_buffer);
+  
+  return nj_true;
 }
 
 nj_bool nj_listen_until(ninjahandle *handle, nj_bool *ptermination_flag) {

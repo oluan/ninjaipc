@@ -1,7 +1,7 @@
 project(ninjaipc)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/dist)
-set (CMAKE_C_FLAGS "-ansi -pedantic -g")
+set (CMAKE_C_FLAGS "-ansi -pedantic -Wall -g")
 
 set(
   SOURCES ${SOURCES}
