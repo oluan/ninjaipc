@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define _CRT_SECURE_NO_WARNINGS /* no thanks */
+
 #include <Windows.h>
 
 #include "../ninjaerr.h"

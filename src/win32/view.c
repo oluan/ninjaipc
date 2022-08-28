@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+#define _CRT_SECURE_NO_WARNINGS /* no thanks */
+
 #include <Windows.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "../ninjaerr.h"
 #include "../ninjaview.h"
@@ -36,7 +39,7 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   }
 
   view.view_fd = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
-                                    NULL, view_size, view_name);
+                                    0, view_size, view_name);
 
   if (NULL == view.view_fd) {
     return view;
@@ -48,7 +51,7 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   }
 
   view.view_buffer =
-      MapViewOfFile(view.view_fd, FILE_MAP_ALL_ACCESS, NULL, NULL, view_size);
+      MapViewOfFile(view.view_fd, FILE_MAP_ALL_ACCESS, 0, 0, view_size);
 
   if (NULL == view.view_buffer) {
     CloseHandle(view.view_fd);
