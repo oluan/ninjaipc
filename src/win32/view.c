@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-#include "../ninjaerr.h"
-#include "../ninjaview.h"
 #include <Windows.h>
 #include <memory.h>
 #include <stdlib.h>
 
+#include "../ninjaerr.h"
+#include "../ninjaview.h"
+
 ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
-  ninjaview view = {.status = nj_false, .view_size = view_size};
-  
+  ninjaview view;
+  view.status = nj_false;
+  view.view_size = view_size;
+
   /* If object_name is invalid or empty */
   if (NULL == view_name || strcmp(view_name, "") == 0) {
     return view;
@@ -52,14 +55,19 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
     return view;
   }
 
+  view.view_name = (char*) malloc(strlen(view_name) + 1);
+  strcpy(view.view_name, view_name);
+
   view.status = nj_true;
 
   return view;
 }
 
 ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
-  ninjaview view = {.status = nj_false, .view_size = view_size};
-  
+  ninjaview view;
+  view.status = nj_false;
+  view.view_size = view_size;
+
   /* If object_name is invalid or empty */
   if (NULL == view_name || strcmp(view_name, "") == 0) {
     return view;
@@ -76,14 +84,25 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
     return view;
   }
 
-  view.view_buffer = MapViewOfFile(view.view_fd, FILE_MAP_ALL_ACCESS, 0, 0, view_size);
+  view.view_buffer =
+      MapViewOfFile(view.view_fd, FILE_MAP_ALL_ACCESS, 0, 0, view_size);
 
   if (NULL == view.view_buffer) {
     CloseHandle(view.view_fd);
     return view;
   }
-  
+
+  view.view_name = (char*) malloc(strlen(view_name) + 1);
+  strcpy(view.view_name, view_name);
+
   view.status = nj_true;
 
   return view;
+}
+
+nj_bool nj_free_view(ninjaview *view) {
+  UnmapViewOfFile(view->view_buffer);
+  CloseHandle(view->view_fd);
+  free(view->view_name);
+  return nj_true;
 }

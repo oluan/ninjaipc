@@ -13,26 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef NINJASYNC_H
-#define NINJASYNC_H
-#include "ninjaerr.h"
+#ifndef NINJAVALIDATORS_H
+#define NINJAVALIDATORS_H
 
-typedef struct ninjasync {
-  void *obj_handle;
-  nj_bool status;
-  char *obj_name;
-} ninjasync;
+#include <string.h>
 
-ninjasync nj_create_sync_obj(const char *object_name);
+#define NJ_INVALID_STRING(x) ((NULL == x || strcmp(x, "") == 0))
 
-ninjasync nj_open_sync_obj(const char *object_name);
-
-nj_bool nj_notify_sync_obj(ninjasync *sync_obj);
-
-nj_bool nj_wait_notify_sync_obj(ninjasync *sync_obj);
-
-nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
-                                      unsigned int timeout);
-
-void nj_free_sync_obj(ninjasync *sync_obj);
 #endif

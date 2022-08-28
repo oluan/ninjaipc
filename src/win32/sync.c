@@ -13,16 +13,20 @@
  * limitations under the License.
  */
 
-#include "../ninjaerr.h"
-#include "../ninjasync.h"
 #include <Windows.h>
 
+#include "../ninjaerr.h"
+#include "../ninjasync.h"
+#include "../ninjavalidators.h"
+
 nj_bool __generic_wfso(void *obj, unsigned int timeout) {
+  DWORD wait_code;
+
   if (NULL == obj) {
     return nj_false;
   }
 
-  DWORD wait_code = WaitForSingleObject(obj, timeout);
+  wait_code = WaitForSingleObject(obj, timeout);
 
   /* Timed out */
   if (timeout > 0 && wait_code == WAIT_TIMEOUT) {
@@ -48,8 +52,7 @@ ninjasync nj_create_sync_obj(const char *object_name) {
   sync_obj.status = nj_false;
 
   /* If object_name is invalid or empty */
-  if (NULL == object_name || strcmp(object_name, "") == 0)
-    return sync_obj;
+  if (NJ_INVALID_STRING(object_name)) return sync_obj;
 
   /* Creates semaphore the returned value is its address */
   sync_obj.obj_handle = CreateEventA(NULL, nj_false, nj_false, object_name);
@@ -65,6 +68,10 @@ ninjasync nj_create_sync_obj(const char *object_name) {
     return sync_obj;
   }
 
+  /* Populate object name */
+  sync_obj.obj_name = (char*) malloc(strlen(object_name) + 1);
+  strcpy(sync_obj.obj_name, object_name);
+
   /* Else it has been created successfully */
   sync_obj.status = nj_true;
 
@@ -77,14 +84,16 @@ ninjasync nj_open_sync_obj(const char *object_name) {
   sync_obj.status = nj_false;
 
   /* If object_name is invalid or empty */
-  if (NULL == object_name || strcmp(object_name, "") == 0)
-    return sync_obj;
+  if (NJ_INVALID_STRING(object_name)) return sync_obj;
 
   sync_obj.obj_handle = OpenEventA(EVENT_ALL_ACCESS, nj_false, object_name);
 
   if (NULL == sync_obj.obj_handle) {
     return sync_obj;
   }
+
+  sync_obj.obj_name = (char*) malloc(strlen(object_name) + 1);
+  strcpy(sync_obj.obj_name, object_name);
 
   sync_obj.status = nj_true;
 
@@ -118,4 +127,10 @@ nj_bool nj_wait_notify_sync_obj_timed(ninjasync *sync_obj,
   }
 
   return __generic_wfso(sync_obj->obj_handle, timeout);
+}
+
+void nj_free_sync_obj(ninjasync *sync_obj) {
+  CloseHandle(sync_obj->obj_handle);
+  free(sync_obj->obj_name);
+  return;
 }

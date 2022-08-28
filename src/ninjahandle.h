@@ -20,18 +20,18 @@
 #include "ninjaview.h"
 
 typedef struct ninjahandle {
-  ninjasync sync_obj;
-
+  ninjasync client_sync_obj;
+  ninjasync server_sync_obj;
   ninjaview view_obj;
-
   ninjall_node *callbacks;
-
   nj_bool status;
+  char *name;
 } ninjahandle;
-
 
 ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size);
 
 ninjahandle nj_open_ipc(const char *ipc_name, unsigned int ipc_size);
+
+void nj_free_handle(ninjahandle *phandle);
 
 #endif

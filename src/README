@@ -1,0 +1,14 @@
+Happy hacking!
+
+#[0] = sync_obj (Client Sync Obj)
+#[1] = sync_obj (Server Sync Obj)
+#[2] = view_obj (View Obj)
+
+<- [IPC SERVER] ->
+  -- Create
+  -- Listen -> Wait for Server Notification (1) -> Call callbacks [ Notify Client (0) ] (?)
+  -- ? -> Either nj_ack or nj_send_response on callback.
+
+<- [IPC CLIENT] ->
+  -- Connect
+  -- Send Request -> Write to shmem (2) -> Notify Server (1) -> Wait for Client Notification (0)
