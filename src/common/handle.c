@@ -48,7 +48,7 @@ ninjahandle nj_create_ipc(const char *ipc_name, unsigned int ipc_size) {
     return handle;
   }
 
-  handle.name = (char *)malloc(strlen(ipc_name));
+  handle.name = (char *)malloc(strlen(ipc_name) + 1);
   strcpy(handle.name, ipc_name);
 
   handle.status = nj_true;
