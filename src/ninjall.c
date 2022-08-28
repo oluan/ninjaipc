@@ -21,7 +21,7 @@
 #include "ninjaerr.h"
 
 ninjall_node *ll_init() {
-  ninjall_node *head = (ninjall_node*) malloc(sizeof(ninjall_node));
+  ninjall_node *head = (ninjall_node*) malloc(sizeof(*head));
   if (NULL == head) {
     return NULL;
   }
@@ -37,7 +37,7 @@ nj_bool ll_register_callback(ninjall_node *head, callback ptr) {
     return nj_false;
   }
 
-  new_node = malloc(sizeof(*head));
+  new_node = (ninjall_node*) malloc(sizeof(*head));
 
   if (NULL == new_node) {
     return nj_false;
