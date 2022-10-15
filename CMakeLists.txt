@@ -38,7 +38,15 @@ set(
 )
 
 add_executable(server ${SERVER_SOURCES})
+if (WIN32)
+target_link_libraries(server)
+else()
 target_link_libraries(server pthread rt)
+endif()
 
 add_executable(client ${CLIENT_SOURCES})
+if (WIN32)
+target_link_libraries(client)
+else()
 target_link_libraries(client pthread rt)
+endif()
