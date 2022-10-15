@@ -18,12 +18,12 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#define __USE_XOPEN2K
 #include <unistd.h>
 
 #include "../ninjahandle.h"
 
 ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
-  char *obj_name;
   ninjaview view;
   view.status = nj_false;
   view.view_size = view_size;
@@ -42,7 +42,7 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   }
 
   /* Ensure the size of file descriptor */
-  ftruncate(view.view_fd, view.view_size);
+  ftruncate((int)((unsigned long)view.view_fd), view.view_size);
 
   /* Maps the shared memory to the proc memory */
   view.view_buffer = mmap(NULL, view.view_size, PROT_READ | PROT_WRITE,
@@ -98,4 +98,5 @@ nj_bool nj_free_view(ninjaview *pview) {
   munmap(pview->view_buffer, pview->view_size);
   close((unsigned long)pview->view_fd);
   free(pview->view_name);
+  return nj_true;
 }

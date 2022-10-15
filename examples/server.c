@@ -23,11 +23,13 @@ void cleanup(int sig) {
 }
 
 int create_ipc() {
+  ninjall_node* root; 
+
   ipc_handle = nj_create_ipc("uwu_ipc", 1024);
 
   if (ipc_handle.status == nj_false) return 0;
 
-  ninjall_node* root = ll_init();
+  root = ll_init();
   ll_register_callback(root, data_callback);
 
   ipc_handle.callbacks = root;
@@ -45,4 +47,6 @@ int main() {
   nj_listen(&ipc_handle);
 
   cleanup(0);
+
+  return 0;
 }
