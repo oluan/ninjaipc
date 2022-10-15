@@ -42,7 +42,9 @@ ninjaview nj_create_view(const char *view_name, unsigned int view_size) {
   }
 
   /* Ensure the size of file descriptor */
-  ftruncate((int)((unsigned long)view.view_fd), view.view_size);
+  if (ftruncate((int)((unsigned long)view.view_fd), view.view_size) < 0) {
+    return view;
+  }
 
   /* Maps the shared memory to the proc memory */
   view.view_buffer = mmap(NULL, view.view_size, PROT_READ | PROT_WRITE,
