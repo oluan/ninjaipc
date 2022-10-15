@@ -15,6 +15,7 @@
 
 #include <fcntl.h>
 #include <linux/time.h>
+#define __USE_XOPEN2K
 #include <semaphore.h>
 #include <stdlib.h>
 #include <string.h>
