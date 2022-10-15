@@ -24,7 +24,7 @@ typedef struct llnode {
   struct llnode *next;
 } ninjall_node;
 
-ninjall_node *ll_init();
+ninjall_node *ll_init(void);
 nj_bool ll_register_callback(ninjall_node *head, callback ptr);
 nj_bool ll_unregister_callback(ninjall_node *head, callback ptr);
 nj_bool ll_notify_all_callbacks(ninjall_node *head, const char *content);

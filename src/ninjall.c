@@ -20,7 +20,7 @@
 
 #include "ninjaerr.h"
 
-ninjall_node *ll_init() {
+ninjall_node *ll_init(void) {
   ninjall_node *head = (ninjall_node*) malloc(sizeof(*head));
   if (NULL == head) {
     return NULL;
