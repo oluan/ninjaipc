@@ -103,9 +103,8 @@ ninjaview nj_open_view(const char *view_name, unsigned int view_size) {
   return view;
 }
 
-nj_bool nj_free_view(ninjaview *view) {
+void nj_free_view(ninjaview *view) {
   UnmapViewOfFile(view->view_buffer);
   CloseHandle(view->view_fd);
   free(view->view_name);
-  return nj_true;
 }
