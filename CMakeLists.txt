@@ -13,13 +13,20 @@ set(
 )
 
 
-if(WIN32)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set(
     SOURCES ${SOURCES}
     src/win32/sync.c
     src/win32/view.c
   )
-else()
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(
+    SOURCES ${SOURCES}
+    src/darwin/sync.c
+    src/darwin/view.c
+    src/darwin/sem_timedwait.c
+  )
+else ()
   set(
     SOURCES ${SOURCES}
     src/linux/sync.c
@@ -38,15 +45,19 @@ set(
 )
 
 add_executable(server ${SERVER_SOURCES})
-if (WIN32)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 target_link_libraries(server)
-else()
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+target_link_libraries(server pthread)
+else ()
 target_link_libraries(server pthread rt)
 endif()
 
 add_executable(client ${CLIENT_SOURCES})
-if (WIN32)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 target_link_libraries(client)
-else()
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+target_link_libraries(client pthread)
+else ()
 target_link_libraries(client pthread rt)
 endif()
