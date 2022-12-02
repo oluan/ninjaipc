@@ -14,7 +14,7 @@
 |--|--|
 | Windows | Supported |
 | Linux | Supported |
-| macOS | Soon |
+| macOS | Supported |
 
   
 
