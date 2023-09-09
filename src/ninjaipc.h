@@ -25,6 +25,9 @@ extern "C" {
 #ifdef __linux__ 
     #define LINUX
 #elif _WIN32
+    #ifdef _MSC_VER
+        #define strdup _strdup
+    #endif
     #define WINDOWS
     #define _CRT_SECURE_NO_WARNINGS
     #include <Windows.h>
@@ -68,7 +71,7 @@ typedef enum {
 
 /* String Utils */
 #define nj_ipc_str_make(len) (char*) malloc(len + 1)
-#define nj_ipc_str_copy(str) _strdup(str)
+#define nj_ipc_str_copy(str) strdup(str)
 #define nj_ipc_str_invalid(str) (str == NULL || strcmp(str, "") == 0)
 
 /* Callback Storage API */
