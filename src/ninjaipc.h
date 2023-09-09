@@ -44,7 +44,7 @@ typedef enum {
 
 /* String Utils */
 #define nj_ipc_str_make(len) (char*) malloc(len + 1)
-#define nj_ipc_str_copy(str) strdup(str)
+#define nj_ipc_str_copy(str) _strdup(str)
 #define nj_ipc_str_invalid(str) (str == NULL || strcmp(str, "") == 0)
 
 /* Synchronization API */
@@ -182,6 +182,8 @@ nj_ipc_sync_free(nj_ipc_sync *sync) {
 #endif
     free(sync->name);
 }
+
+
 
 
 #endif
