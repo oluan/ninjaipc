@@ -5,7 +5,8 @@
  * - Synchronization API: Allows for inter-process signaling using synchronization objects.
  * - Shared Memory API: Allows for sharing memory between processes for data interchange.
  * - Callback Storage API: Provides a way to store and execute callback functions.
- * - High-Level IPC API: Provides a high-level interface to create an IPC mechanism using the features.
+ * - High-Level C IPC API: Provides a high-level interface to create an IPC mechanism using the features.
+ * - High-Level C++ IPC API: Provides a high-level implementation of an IPC mechanism in C++.
  * 
  * The library currently supports Windows. POSIX support is planned for future releases.
  * 
@@ -16,6 +17,10 @@
 
 #ifndef _NINJAIPC_H
 #define _NINJAIPC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef __linux__ 
     #define LINUX
@@ -619,4 +624,111 @@ nj_ipc_channel_free(nj_ipc_channel *ch) {
     if (ch->name) free(ch->name);
 }
 
+#endif
+
+#ifdef __cplusplus
+}
+/* High-Level C++ API */
+#include <string>
+#include <mutex>
+
+namespace NinjaIPC {
+    class Channel {
+    public:
+        enum class ChannelRole { CLIENT, SERVER };
+
+        static std::unique_ptr<Channel> make(const std::string& name, unsigned int size) {
+            return std::make_unique<Channel>(name, size, ChannelRole::SERVER);
+        }
+
+        static std::unique_ptr<Channel> connect(const std::string& name, unsigned int size) {
+            return std::make_unique<Channel>(name, size, ChannelRole::CLIENT);
+        }
+
+        ~Channel() {
+            nj_ipc_channel_free(&channel_);
+        }
+
+        template<typename T>
+        T send(const T& data) {
+            if (role_ != ChannelRole::CLIENT) {
+                throw std::runtime_error("Send operation not allowed for SERVER role");
+            }
+            std::lock_guard<std::mutex> lock(mutex_);
+
+            if (nj_ipc_channel_write(&channel_, (void*)&data, sizeof(T)) != SUCCESS) {
+                throw std::runtime_error("Failed to write data");
+            }
+
+            nj_ipc_channel_notify_client(&channel_);
+
+            if (nj_ipc_channel_wait_server(&channel_) != SUCCESS) {
+                throw std::runtime_error("Failed to wait for server");
+            }
+
+            T response;
+            if (nj_ipc_channel_read(&channel_, &response, sizeof(T)) != SUCCESS) {
+                throw std::runtime_error("Failed to read response");
+            }
+
+            return response;
+        }
+
+        template<typename T>
+        T receive() {
+            if (role_ != ChannelRole::SERVER) {
+                throw std::runtime_error("Receive operation not allowed for CLIENT role");
+            }
+
+            std::lock_guard<std::mutex> lock(mutex_);
+
+            if (nj_ipc_channel_wait_client(&channel_) != SUCCESS) {
+                throw std::runtime_error("Failed to wait for client");
+            }
+
+            T request;
+            if (nj_ipc_channel_read(&channel_, &request, sizeof(T)) != SUCCESS) {
+                throw std::runtime_error("Failed to read request");
+            }
+            return request;
+        }
+
+        template<typename T>
+        void reply(const T& data) {
+            if (role_ != ChannelRole::SERVER) {
+                throw std::runtime_error("Reply operation not allowed for CLIENT role");
+            }
+
+            std::lock_guard<std::mutex> lock(mutex_);
+
+            if (nj_ipc_channel_write(&channel_, (void*)&data, sizeof(T)) != SUCCESS) {
+                throw std::runtime_error("Failed to write reply");
+            }
+            nj_ipc_channel_notify_server(&channel_);
+        }
+
+        Channel(const std::string& name, unsigned int size, ChannelRole role)
+            : role_(role)
+        {
+            switch (role) {
+            case ChannelRole::SERVER:
+                channel_ = nj_ipc_channel_create(name.c_str(), size);
+                break;
+            case ChannelRole::CLIENT:
+                channel_ = nj_ipc_channel_open(name.c_str(), size);
+                break;
+            default:
+                throw std::runtime_error("Unknown role on Channel ctor");
+            }
+
+            if (channel_.status != SUCCESS) {
+                throw std::runtime_error("Failed to create channel");
+            }
+        }
+    private:
+        nj_ipc_channel channel_;
+        std::mutex mutex_;
+        ChannelRole role_;
+    };
+}
 #endif
