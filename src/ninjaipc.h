@@ -20,13 +20,15 @@
     #define LINUX
 #elif _WIN32
     #define WINDOWS
+    #define _CRT_SECURE_NO_WARNINGS
     #include <Windows.h>
+    #undef _CRT_SECURE_NO_WARNINGS
 #else
 
 #endif
 
-#include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <memory.h>
 
 /* Shared error codes */
@@ -307,6 +309,7 @@ nj_ipc_shmem_create(const char *name, unsigned int shmem_size) {
     }
 
     object.name = nj_ipc_str_copy(name);
+    object.view_size = shmem_size;
     object.status = SUCCESS;
 
     return object;
@@ -357,6 +360,7 @@ nj_ipc_shmem_open(const char *name, unsigned int shmem_size) {
     }
 
     object.name = nj_ipc_str_copy(name);
+    object.view_size = shmem_size;
     object.status = SUCCESS;
 
     return object;
