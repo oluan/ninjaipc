@@ -34,12 +34,19 @@ typedef enum {
     SUCCESS,
     ERR,
     INVALID_NAME,
+
     SYNC_CREATE_FAIL,
     SYNC_ALREADY_EXISTS_FAIL,
     SYNC_OPEN_FAIL,
     SYNC_INVALID_OBJECT,
     SYNC_NOTIFY_FAILED,
     SYNC_WAIT_FAILED,
+
+    SHMEM_INVALID_SIZE,
+    SHMEM_CREATE_FAIL,
+    SHMEM_ALREADY_EXISTS_FAIL,
+    SHMEM_MAPPING_FAIL,
+    SHMEM_OPEN_FAIL,
 } nj_ipc_error;
 
 /* String Utils */
@@ -183,7 +190,131 @@ nj_ipc_sync_free(nj_ipc_sync *sync) {
     free(sync->name);
 }
 
+/* Shared Memory API */
+typedef struct nj_ipc_shmem {
+    void *handle;
+    void *view;
+    unsigned int view_size;
+    nj_ipc_error status;
+    char *name;
+} nj_ipc_shmem;
 
+/**
+ * Create a new Shared memory object.
+ *
+ * @param name The name of the shared memory object.
+ * @return A new nj_ipc_shmem object.
+ */
+nj_ipc_shmem
+nj_ipc_shmem_create(const char *name, unsigned int shmem_size) {
+    nj_ipc_shmem object;
+    object.status = ERR;
 
+    if (nj_ipc_str_invalid(name)) {
+        object.status = INVALID_NAME;
+        return object;
+    }
+
+    if (!shmem_size) {
+        object.status = SHMEM_INVALID_SIZE;
+        return object;
+    }
+
+#ifdef WINDOWS
+    object.handle = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, shmem_size, name);
+
+    if (!object.handle) {
+        object.status = SHMEM_CREATE_FAIL;
+        return object;
+    }
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        object.status = SHMEM_ALREADY_EXISTS_FAIL;
+        return object;
+    }
+
+    object.view = MapViewOfFile(object.handle, FILE_MAP_ALL_ACCESS, 0, 0, shmem_size);
+
+    if (!object.view) {
+        CloseHandle(object.handle);
+        object.status = SHMEM_MAPPING_FAIL;
+        return object;
+    }
+
+    object.name = nj_ipc_str_copy(name);
+    object.status = SUCCESS;
+
+    return object;
+#endif
+    return object;
+}
+
+/**
+ * Opens an existing Shared memory object.
+ *
+ * @param name The name of the shared memory object to be open.
+ * @return A new nj_ipc_shmem object.
+ */
+nj_ipc_shmem
+nj_ipc_shmem_open(const char *name, unsigned int shmem_size) {
+    nj_ipc_shmem object;
+    object.status = ERR;
+
+    if (nj_ipc_str_invalid(name)) {
+        object.status = INVALID_NAME;
+        return object;
+    }
+
+    if (!shmem_size) {
+        object.status = SHMEM_INVALID_SIZE;
+        return object;
+    }
+
+#ifdef WINDOWS
+    object.handle = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, name);
+
+    if (!object.handle) {
+        object.status = SHMEM_OPEN_FAIL;
+        return object;
+    }
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        object.status = SHMEM_ALREADY_EXISTS_FAIL;
+        return object;
+    }
+
+    object.view = MapViewOfFile(object.handle, FILE_MAP_ALL_ACCESS, 0, 0, shmem_size);
+
+    if (!object.view) {
+        CloseHandle(object.handle);
+        object.status = SHMEM_MAPPING_FAIL;
+        return object;
+    }
+
+    object.name = nj_ipc_str_copy(name);
+    object.status = SUCCESS;
+
+    return object;
+#endif
+    return object;
+}
+
+/**
+ * Frees a shared memory object
+ *
+ * @param sync The shared memory object to be freed.
+ * @return Nothing
+ */
+void
+nj_ipc_shmem_free(nj_ipc_shmem *shmem) {
+    if (!shmem) {
+        return;
+    }
+#ifdef WINDOWS
+    if (shmem->handle) CloseHandle(shmem->handle);
+    if (shmem->view) UnmapViewOfFile(shmem->view);
+#endif
+    free(shmem->name);
+}
 
 #endif
