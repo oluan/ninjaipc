@@ -8,7 +8,7 @@
  * - High-Level C IPC API: Provides a high-level interface to create an IPC mechanism using the features.
  * - High-Level C++ IPC API: Provides a high-level implementation of an IPC mechanism in C++.
  * 
- * The library currently supports Windows. POSIX support is planned for future releases.
+ * The library currently supports Windows and POSIX.
  * 
  * Please see the individual API functions for more details.
  * 
