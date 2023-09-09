@@ -24,11 +24,20 @@ extern "C" {
 
 #ifdef __linux__ 
     #define LINUX
+    #define handle_to_fd(handle) (int)(long long)handle
+    #define fd_to_handle(fd) (void*)(long long)fd
+    #include <semaphore.h>
+    #include <fcntl.h>
+    #include <errno.h>
+    #include <sys/mman.h>
+    #include <fcntl.h>
+    #include <errno.h>
+    #include <unistd.h>
 #elif _WIN32
+    #define WINDOWS
     #ifdef _MSC_VER
         #define strdup _strdup
     #endif
-    #define WINDOWS
     #define _CRT_SECURE_NO_WARNINGS
     #include <Windows.h>
     #undef _CRT_SECURE_NO_WARNINGS
@@ -171,6 +180,23 @@ nj_ipc_sync_create(const char *name) {
 
     return object;
 #endif
+#ifdef LINUX
+    object.handle = sem_open(name, O_CREAT | O_EXCL, 0644, 1); // Initial value is 1
+
+    if (object.handle == SEM_FAILED) {
+        if (errno == EEXIST) {
+            object.status = SYNC_ALREADY_EXISTS_FAIL;
+        } else {
+            object.status = SYNC_CREATE_FAIL;
+        }
+        return object;
+    }
+
+    object.name = nj_ipc_str_copy(name);
+    object.status = SUCCESS;
+
+    return object;
+#endif
     return object;
 }
 
@@ -203,6 +229,19 @@ nj_ipc_sync_open(const char *name) {
 
     return object;
 #endif
+#ifdef LINUX
+    object.handle = sem_open(name, 0);
+
+    if (object.handle == SEM_FAILED) {
+        object.status = SYNC_OPEN_FAIL;
+        return object;
+    }
+
+    object.name = nj_ipc_str_copy(name);
+    object.status = SUCCESS;
+
+    return object;
+#endif
     return object;
 }
 
@@ -219,6 +258,9 @@ nj_ipc_sync_notify(nj_ipc_sync *sync) {
     }
 #ifdef WINDOWS
     return SetEvent(sync->handle) ? SUCCESS :  SYNC_NOTIFY_FAILED;
+#endif
+#ifdef LINUX
+    return sem_post((sem_t *)sync->handle) == 0 ? SUCCESS : SYNC_NOTIFY_FAILED;
 #endif
 }
 
@@ -247,6 +289,9 @@ nj_ipc_sync_wait(nj_ipc_sync *sync) {
             return ERR;
     }
 #endif
+#ifdef LINUX
+    return sem_wait((sem_t *)sync->handle) == 0 ? SUCCESS : SYNC_WAIT_FAILED;
+#endif
 }
 
 /**
@@ -262,6 +307,10 @@ nj_ipc_sync_free(nj_ipc_sync *sync) {
     }
 #ifdef WINDOWS
     CloseHandle(sync->handle);
+#endif
+#ifdef LINUX
+    sem_close((sem_t *)sync->handle);
+    sem_unlink(sync->name);
 #endif
     free(sync->name);
 }
@@ -323,6 +372,41 @@ nj_ipc_shmem_create(const char *name, unsigned int shmem_size) {
 
     return object;
 #endif
+#ifdef LINUX
+    object.handle = fd_to_handle(shm_open(name, O_CREAT | O_RDWR | O_EXCL, 0600));
+
+    if (handle_to_fd(object.handle) == -1) {
+        if (errno == EEXIST) {
+            object.status = SHMEM_ALREADY_EXISTS_FAIL;
+        } else {
+            object.status = SHMEM_CREATE_FAIL;
+        }
+        return object;
+    }
+
+    if (ftruncate(handle_to_fd(object.handle), shmem_size) == -1) {
+        close(handle_to_fd(object.handle));
+        shm_unlink(name);
+        object.status = SHMEM_INVALID_SIZE;
+        return object;
+    }
+
+    void *mapped_mem = mmap(NULL, shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle_to_fd(object.handle), 0);
+
+    if (mapped_mem == MAP_FAILED) {
+        close(handle_to_fd(object.handle));
+        shm_unlink(name);
+        object.status = SHMEM_MAPPING_FAIL;
+        return object;
+    }
+
+    object.view = mapped_mem;
+    object.view_size = shmem_size;
+    object.name = nj_ipc_str_copy(name);
+    object.status = SUCCESS;
+
+    return object;
+#endif
     return object;
 }
 
@@ -374,6 +458,29 @@ nj_ipc_shmem_open(const char *name, unsigned int shmem_size) {
 
     return object;
 #endif
+#ifdef LINUX
+    object.handle = fd_to_handle(shm_open(name, O_RDWR, 0));
+
+    if (handle_to_fd(object.handle) == -1) {
+        object.status = SHMEM_OPEN_FAIL;
+        return object;
+    }
+
+    void *mapped_mem = mmap(NULL, shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED, handle_to_fd(object.handle), 0);
+
+    if (mapped_mem == MAP_FAILED) {
+        close(handle_to_fd(object.handle));
+        object.status = SHMEM_MAPPING_FAIL;
+        return object;
+    }
+
+    object.view = mapped_mem;
+    object.view_size = shmem_size;
+    object.name = nj_ipc_str_copy(name);
+    object.status = SUCCESS;
+
+    return object;
+#endif
     return object;
 }
 
@@ -391,6 +498,14 @@ nj_ipc_shmem_free(nj_ipc_shmem *shmem) {
 #ifdef WINDOWS
     if (shmem->handle) CloseHandle(shmem->handle);
     if (shmem->view) UnmapViewOfFile(shmem->view);
+#endif
+#ifdef LINUX
+    if (shmem->view) munmap(shmem->view, shmem->view_size);
+
+    if (shmem->handle) {
+        close((int)(intptr_t)shmem->handle);
+        shm_unlink(shmem->name); /* should client unlink it? hm... */
+    }
 #endif
     free(shmem->name);
 }
@@ -634,6 +749,7 @@ nj_ipc_channel_free(nj_ipc_channel *ch) {
 /* High-Level C++ API */
 #include <string>
 #include <mutex>
+#include <memory>
 
 namespace NinjaIPC {
     class Channel {
