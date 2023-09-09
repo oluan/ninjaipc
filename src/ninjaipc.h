@@ -5,6 +5,7 @@
  * - Synchronization API: Allows for inter-process signaling using synchronization objects.
  * - Shared Memory API: Allows for sharing memory between processes for data interchange.
  * - Callback Storage API: Provides a way to store and execute callback functions.
+ * - High-Level IPC API: Provides a high-level interface to create an IPC mechanism using the features.
  * 
  * The library currently supports Windows. POSIX support is planned for future releases.
  * 
