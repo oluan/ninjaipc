@@ -1,0 +1,32 @@
+name: Build Example
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Change to test directory
+      run: cd test
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/test/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/test/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      run: ctest -C ${{env.BUILD_TYPE}}
