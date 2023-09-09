@@ -13,7 +13,7 @@ NinjaIPC is your go-to library for straightforward, efficient inter-process comm
 | Platform  | Support         |
 |-----------|-----------------|
 | Windows   | ✅ Supported     |
-| Linux     | 🔜 Coming Soon  |
+| Linux     | ✅ Supported     |
 | macOS     | 🔜 Coming Soon  |
 
 ## 🛠 Language Bindings
