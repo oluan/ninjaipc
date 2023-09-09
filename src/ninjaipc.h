@@ -47,6 +47,15 @@ typedef enum {
     SHMEM_ALREADY_EXISTS_FAIL,
     SHMEM_MAPPING_FAIL,
     SHMEM_OPEN_FAIL,
+
+    CHANNEL_WRITE_INVALID_SHMEM,
+    CHANNEL_WRITE_TOO_BIG,
+
+    CHANNEL_READ_INVALID_SHMEM,
+    CHANNEL_READ_TOO_BIG,
+
+    CHANNEL_WAIT_INVALID_EVENT,
+    CHANNEL_NOTIFY_INVALID_EVENT,
 } nj_ipc_error;
 
 /* String Utils */
@@ -68,7 +77,7 @@ nj_ipc_callback_node* callback_lst_head = NULL;
  * Add a new callback
  *
  * @param func The name of the synchronization object.
- * @return Nothing
+ * @return Nothing.
  */
 void
 nj_ipc_callback_add(nj_ipc_callback_t func) {
@@ -82,7 +91,7 @@ nj_ipc_callback_add(nj_ipc_callback_t func) {
  * Execute all callbacks with data
  *
  * @param data Binary data to send to the callbacks.
- * @return Nothing
+ * @return Nothing.
  */
 void
 nj_ipc_callback_execute(void *data) {
@@ -190,7 +199,7 @@ nj_ipc_sync_open(const char *name) {
  * Opens an existing IPC synchronization object.
  *
  * @param sync The synchronization object to notify.
- * @return Notification status
+ * @return Notification status.
  */
 nj_ipc_error
 nj_ipc_sync_notify(nj_ipc_sync *sync) {
@@ -206,7 +215,7 @@ nj_ipc_sync_notify(nj_ipc_sync *sync) {
  * Waits for an synchronization object to be notified.
  *
  * @param sync The synchronization object to wait for notification.
- * @return Wait status
+ * @return Wait status.
  */
 nj_ipc_error
 nj_ipc_sync_wait(nj_ipc_sync *sync) {
@@ -233,7 +242,7 @@ nj_ipc_sync_wait(nj_ipc_sync *sync) {
  * Frees a synchronization object
  *
  * @param sync The synchronization object to be freed.
- * @return Nothing
+ * @return Nothing.
  */
 void
 nj_ipc_sync_free(nj_ipc_sync *sync) {
@@ -359,7 +368,7 @@ nj_ipc_shmem_open(const char *name, unsigned int shmem_size) {
  * Frees a shared memory object
  *
  * @param sync The shared memory object to be freed.
- * @return Nothing
+ * @return Nothing.
  */
 void
 nj_ipc_shmem_free(nj_ipc_shmem *shmem) {
@@ -371,6 +380,238 @@ nj_ipc_shmem_free(nj_ipc_shmem *shmem) {
     if (shmem->view) UnmapViewOfFile(shmem->view);
 #endif
     free(shmem->name);
+}
+
+/* High-Level IPC API */
+typedef struct nj_ipc_channel {
+    nj_ipc_sync server_event;
+    nj_ipc_sync client_event;
+    nj_ipc_shmem shmem;
+    nj_ipc_error status;
+    char *name;
+} nj_ipc_channel;
+
+/**
+ * Create a new IPC channel.
+ *
+ * @param name The name of the IPC channel.
+ * @param shmem_size Size of the shared memory in bytes.
+ * @return A new nj_ipc_channel object.
+ */
+nj_ipc_channel
+nj_ipc_channel_create(const char *name, unsigned int shmem_size) {
+    char server_event_name[256], client_event_name[256];
+    nj_ipc_channel ch;
+    ch.status = ERR;
+
+    if (nj_ipc_str_invalid(name)) {
+        ch.status = INVALID_NAME;
+        return ch;
+    }
+
+    sprintf(server_event_name, "%s_server_njipc", name);
+    sprintf(client_event_name, "%s_client_njipc", name);
+
+    ch.server_event = nj_ipc_sync_create(server_event_name);
+
+    if (ch.server_event.status != SUCCESS) {
+        ch.status = ch.server_event.status;
+        return ch;
+    }
+
+    ch.client_event = nj_ipc_sync_create(client_event_name);
+
+    if (ch.client_event.status != SUCCESS) {
+        nj_ipc_sync_free(&(ch.server_event));
+        ch.status = ch.client_event.status;
+        return ch;
+    }
+
+    ch.shmem = nj_ipc_shmem_create(name, shmem_size);
+
+    if (ch.shmem.status != SUCCESS) {
+        nj_ipc_sync_free(&(ch.server_event));
+        nj_ipc_sync_free(&(ch.client_event));
+        ch.status = ch.shmem.status;
+        return ch;
+    }
+
+    ch.name = nj_ipc_str_copy(name);
+    ch.status = SUCCESS;
+
+    return ch;
+}
+
+/**
+ * Open an existing IPC channel.
+ *
+ * @param name The name of the IPC channel.
+ * @param shmem_size Size of the shared memory in bytes.
+ * @return An opened nj_ipc_channel object.
+ */
+nj_ipc_channel
+nj_ipc_channel_open(const char *name, unsigned int shmem_size) {
+    char server_event_name[256], client_event_name[256];
+    nj_ipc_channel ch;
+    ch.status = ERR;
+
+    if (nj_ipc_str_invalid(name)) {
+        ch.status = INVALID_NAME;
+        return ch;
+    }
+
+    sprintf(server_event_name, "%s_server_njipc", name);
+    sprintf(client_event_name, "%s_client_njipc", name);
+
+    ch.server_event = nj_ipc_sync_open(server_event_name);
+
+    if (ch.server_event.status != SUCCESS) {
+        ch.status = ch.server_event.status;
+        return ch;
+    }
+
+    ch.client_event = nj_ipc_sync_open(client_event_name);
+
+    if (ch.client_event.status != SUCCESS) {
+        nj_ipc_sync_free(&(ch.server_event));
+        ch.status = ch.client_event.status;
+        return ch;
+    }
+
+    ch.shmem = nj_ipc_shmem_open(name, shmem_size);
+
+    if (ch.shmem.status != SUCCESS) {
+        nj_ipc_sync_free(&(ch.server_event));
+        nj_ipc_sync_free(&(ch.client_event));
+        ch.status = ch.shmem.status;
+        return ch;
+    }
+
+    ch.name = nj_ipc_str_copy(name);
+    ch.status = SUCCESS;
+
+    return ch;
+}
+
+/**
+ * Write data into the shared memory of the IPC channel.
+ *
+ * @param channel Pointer to the nj_ipc_channel object.
+ * @param data The data to be written.
+ * @param data_size The size of the data beign written.
+ * @return The write status.
+ */
+nj_ipc_error
+nj_ipc_channel_write(nj_ipc_channel *channel, void *data, size_t data_size) {
+    if (!channel || !channel->shmem.view) {
+        return CHANNEL_WRITE_INVALID_SHMEM;
+    }
+
+    if (data_size > channel->shmem.view_size) {
+        return CHANNEL_WRITE_TOO_BIG;
+    }
+
+    memcpy(channel->shmem.view, data, data_size);
+    return SUCCESS;
+}
+
+/**
+ * Reads data into from the shared memory of the IPC channel.
+ *
+ * @param channel Pointer to the nj_ipc_channel object.
+ * @param buffer The buffer to read into.
+ * @param read_size The size of the data beign read.
+ * @return The read status.
+ */
+nj_ipc_error
+nj_ipc_channel_read(nj_ipc_channel *channel, void *buffer, size_t read_size) {
+    if (!channel || !channel->shmem.view) {
+        return CHANNEL_READ_INVALID_SHMEM;
+    }
+
+    if (read_size > channel->shmem.view_size) {
+        return CHANNEL_READ_TOO_BIG;
+    }
+
+    memcpy(buffer, channel->shmem.view, read_size);
+    return SUCCESS;
+}
+
+/**
+ * Wait for a server event on the IPC channel.
+ *
+ * @param ch Pointer to the nj_ipc_channel object.
+ * @return The wait status.
+ */
+nj_ipc_error
+nj_ipc_channel_wait_server(nj_ipc_channel *ch) {
+    if (!ch || !ch->server_event.handle) {
+        return CHANNEL_WAIT_INVALID_EVENT;
+    }
+
+    return nj_ipc_sync_wait(&(ch->server_event));
+}
+
+/**
+ * Wait for a client event on the IPC channel.
+ *
+ * @param ch Pointer to the nj_ipc_channel object.
+ * @return The wait status.
+ */
+nj_ipc_error
+nj_ipc_channel_wait_client(nj_ipc_channel *ch) {
+    if (!ch || !ch->client_event.handle) {
+        return CHANNEL_WAIT_INVALID_EVENT;
+    }
+
+    return nj_ipc_sync_wait(&(ch->client_event));
+}
+
+/**
+ * Notify the server event on the IPC channel.
+ *
+ * @param ch Pointer to the nj_ipc_channel object.
+ * @return The notify status.
+ */
+nj_ipc_error
+nj_ipc_channel_notify_server(nj_ipc_channel *ch) {
+    if (!ch || !ch->server_event.handle) {
+        return CHANNEL_NOTIFY_INVALID_EVENT;
+    }
+
+    return nj_ipc_sync_notify(&(ch->server_event));
+}
+
+/**
+ * Notify the client event on the IPC channel.
+ *
+ * @param ch Pointer to the nj_ipc_channel object.
+ * @return The notify status.
+ */
+nj_ipc_error
+nj_ipc_channel_notify_client(nj_ipc_channel *ch) {
+    if (!ch || !ch->client_event.handle) {
+        return CHANNEL_NOTIFY_INVALID_EVENT;
+    }
+
+    return nj_ipc_sync_notify(&(ch->client_event));
+}
+
+/**
+ * Frees an IPC channel
+ *
+ * @param channel Pointer to the nj_ipc_channel object to be freed.
+ * @return Nothing.
+ */
+void
+nj_ipc_channel_free(nj_ipc_channel *ch) {
+    if (!ch) {
+        return;
+    }
+    if (ch->server_event.handle) nj_ipc_sync_free(&(ch->server_event));
+    if (ch->client_event.handle) nj_ipc_sync_free(&(ch->client_event));
+    if (ch->shmem.handle) nj_ipc_shmem_free(&(ch->shmem));
+    if (ch->name) free(ch->name);
 }
 
 #endif
