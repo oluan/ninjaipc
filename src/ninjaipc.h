@@ -54,6 +54,62 @@ typedef enum {
 #define nj_ipc_str_copy(str) _strdup(str)
 #define nj_ipc_str_invalid(str) (str == NULL || strcmp(str, "") == 0)
 
+/* Callback Storage API */
+typedef void (*nj_ipc_callback_t)(void* data);
+
+typedef struct nj_ipc_callback_node {
+    nj_ipc_callback_t func;
+    struct nj_ipc_callback_node* next;
+} nj_ipc_callback_node;
+
+nj_ipc_callback_node* callback_lst_head = NULL;
+
+/**
+ * Add a new callback
+ *
+ * @param func The name of the synchronization object.
+ * @return Nothing
+ */
+void
+nj_ipc_callback_add(nj_ipc_callback_t func) {
+    nj_ipc_callback_node* new_node = (nj_ipc_callback_node*) malloc(sizeof(*new_node));
+    new_node->func = func;
+    new_node->next = callback_lst_head;
+    callback_lst_head = new_node;
+}
+
+/**
+ * Execute all callbacks with data
+ *
+ * @param data Binary data to send to the callbacks.
+ * @return Nothing
+ */
+void
+nj_ipc_callback_execute(void *data) {
+    nj_ipc_callback_node* current = callback_lst_head;
+    while (current != NULL) {
+        current->func(data);
+        current = current->next;
+    }
+}
+
+/**
+ * Frees the callback list
+ *
+ * @return Nothing
+ */
+void
+nj_ipc_callback_free() {
+    nj_ipc_callback_node* current = callback_lst_head;
+    nj_ipc_callback_node* next;
+    while (current != NULL) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    callback_lst_head = NULL;
+}
+
 /* Synchronization API */
 typedef struct nj_ipc_sync {
     void *handle;
