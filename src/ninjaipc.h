@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-#ifdef __linux__ 
-    #define LINUX
+#ifndef _WIN32 
+    #define NJ_IPC_POSIX
     #define handle_to_fd(handle) (int)(long long)handle
     #define fd_to_handle(fd) (void*)(long long)fd
     #include <semaphore.h>
@@ -33,16 +33,14 @@ extern "C" {
     #include <fcntl.h>
     #include <errno.h>
     #include <unistd.h>
-#elif _WIN32
-    #define WINDOWS
+#else 
+    #define NJ_IPC_WIN
     #ifdef _MSC_VER
         #define strdup _strdup
     #endif
     #define _CRT_SECURE_NO_WARNINGS
     #include <Windows.h>
     #undef _CRT_SECURE_NO_WARNINGS
-#else
-
 #endif
 
 #include <stdlib.h>
@@ -162,7 +160,7 @@ nj_ipc_sync_create(const char *name) {
         return object;
     }
 
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     object.handle = CreateEventA(NULL, FALSE, FALSE, name);
 
     if (!object.handle) {
@@ -180,7 +178,7 @@ nj_ipc_sync_create(const char *name) {
 
     return object;
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     object.handle = sem_open(name, O_CREAT | O_EXCL, 0644, 1); // Initial value is 1
 
     if (object.handle == SEM_FAILED) {
@@ -216,7 +214,7 @@ nj_ipc_sync_open(const char *name) {
         return object;
     }
 
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     object.handle = OpenEventA(EVENT_ALL_ACCESS, FALSE, name);
 
     if (!object.handle) {
@@ -229,7 +227,7 @@ nj_ipc_sync_open(const char *name) {
 
     return object;
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     object.handle = sem_open(name, 0);
 
     if (object.handle == SEM_FAILED) {
@@ -256,10 +254,10 @@ nj_ipc_sync_notify(nj_ipc_sync *sync) {
     if (!sync || !sync->handle) {
         return SYNC_INVALID_OBJECT;
     }
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     return SetEvent(sync->handle) ? SUCCESS :  SYNC_NOTIFY_FAILED;
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     return sem_post((sem_t *)sync->handle) == 0 ? SUCCESS : SYNC_NOTIFY_FAILED;
 #endif
 }
@@ -275,7 +273,7 @@ nj_ipc_sync_wait(nj_ipc_sync *sync) {
     if (!sync || !sync->handle) {
         return SYNC_INVALID_OBJECT;
     }
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     DWORD waitcode = WaitForSingleObject(sync->handle, INFINITE);
 
     switch (waitcode) { /* @todo: Should we have platform specific errors? */
@@ -289,7 +287,7 @@ nj_ipc_sync_wait(nj_ipc_sync *sync) {
             return ERR;
     }
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     return sem_wait((sem_t *)sync->handle) == 0 ? SUCCESS : SYNC_WAIT_FAILED;
 #endif
 }
@@ -305,10 +303,10 @@ nj_ipc_sync_free(nj_ipc_sync *sync) {
     if (!sync || !sync->handle) {
         return;
     }
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     CloseHandle(sync->handle);
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     sem_close((sem_t *)sync->handle);
     sem_unlink(sync->name);
 #endif
@@ -345,7 +343,7 @@ nj_ipc_shmem_create(const char *name, unsigned int shmem_size) {
         return object;
     }
 
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     object.handle = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, shmem_size, name);
 
     if (!object.handle) {
@@ -372,7 +370,7 @@ nj_ipc_shmem_create(const char *name, unsigned int shmem_size) {
 
     return object;
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     object.handle = fd_to_handle(shm_open(name, O_CREAT | O_RDWR | O_EXCL, 0600));
 
     if (handle_to_fd(object.handle) == -1) {
@@ -431,7 +429,7 @@ nj_ipc_shmem_open(const char *name, unsigned int shmem_size) {
         return object;
     }
 
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     object.handle = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, name);
 
     if (!object.handle) {
@@ -458,7 +456,7 @@ nj_ipc_shmem_open(const char *name, unsigned int shmem_size) {
 
     return object;
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     object.handle = fd_to_handle(shm_open(name, O_RDWR, 0));
 
     if (handle_to_fd(object.handle) == -1) {
@@ -495,11 +493,11 @@ nj_ipc_shmem_free(nj_ipc_shmem *shmem) {
     if (!shmem) {
         return;
     }
-#ifdef WINDOWS
+#ifdef NJ_IPC_WIN
     if (shmem->handle) CloseHandle(shmem->handle);
     if (shmem->view) UnmapViewOfFile(shmem->view);
 #endif
-#ifdef LINUX
+#ifdef NJ_IPC_POSIX
     if (shmem->view) munmap(shmem->view, shmem->view_size);
 
     if (shmem->handle) {
