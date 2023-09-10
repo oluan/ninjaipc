@@ -1,4 +1,4 @@
-name: Build Example
+name: Run tests
 
 on:
   push:
@@ -19,9 +19,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Change to test directory
-      run: cd test
-
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/test/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
@@ -29,4 +26,6 @@ jobs:
       run: cmake --build ${{github.workspace}}/test/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
-      run: ctest -C ${{env.BUILD_TYPE}}
+      run: | 
+      cd test/build
+      ctest -C ${{env.BUILD_TYPE}}
